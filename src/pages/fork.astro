@@ -1,0 +1,33 @@
+---
+import { ForkOverview } from "@/components/fork/ForkOverview";
+import { ForkRepCheckSection } from "@/components/fork/ForkRepCheckSection";
+import {
+  ExchangeSupportSection,
+  ScamWarningSection,
+  TokenLinksSection,
+} from "@/components/fork/ForkResourceSections";
+import { SiteFooter } from "@/components/layout/SiteFooter";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { forkSections } from "@/content/fork/fork-sections";
+import ForkWatchLayout from "@/layouts/ForkWatchLayout.astro";
+
+const title = "ForkWatch";
+const description =
+  "ForkWatch is a public REP holder safety and fork-status dashboard for the Augur reboot.";
+---
+
+<ForkWatchLayout description={description} title={title}>
+  <div class="ambient-page min-h-screen bg-background text-foreground">
+    <SiteHeader client:load sections={forkSections} />
+    <main
+      class="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8"
+    >
+      <ForkOverview client:load />
+      <ScamWarningSection />
+      <ExchangeSupportSection client:visible />
+      <ForkRepCheckSection client:visible />
+      <TokenLinksSection client:visible />
+    </main>
+    <SiteFooter />
+  </div>
+</ForkWatchLayout>

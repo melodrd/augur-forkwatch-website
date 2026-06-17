@@ -1,0 +1,149 @@
+name: Build and Deploy GitHub Pages
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "59 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Build static site
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    env:
+      BUILD_DIR: dist
+      ETH_RPC_LABEL: ${{ vars.ETH_RPC_LABEL }}
+      ETH_RPC_URL: ${{ secrets.ETH_RPC_URL }}
+      PUBLIC_MAIN_SITE_URL: ${{ vars.PUBLIC_MAIN_SITE_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          fetch-depth: 1
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: "1.3.14"
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Resolve Pages environment
+        id: pages-env
+        env:
+          CONFIGURED_BASE_PATH: ${{ vars.BASE_PATH }}
+          CONFIGURED_SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          repository_name="${GITHUB_REPOSITORY#*/}"
+          default_base_path="/${repository_name}/"
+          default_site_url="https://${GITHUB_REPOSITORY_OWNER}.github.io/${repository_name}"
+
+          if [[ "${repository_name}" == "${GITHUB_REPOSITORY_OWNER}.github.io" ]]; then
+            default_base_path="/"
+            default_site_url="https://${GITHUB_REPOSITORY_OWNER}.github.io"
+          fi
+
+          site_url="${CONFIGURED_SITE_URL:-$default_site_url}"
+          base_path="${CONFIGURED_BASE_PATH:-$default_base_path}"
+
+          case "$base_path" in
+            "") base_path="/" ;;
+            /*) ;;
+            *) base_path="/$base_path" ;;
+          esac
+
+          case "$base_path" in
+            */) ;;
+            *) base_path="$base_path/" ;;
+          esac
+
+          {
+            echo "GITHUB_PAGES=true"
+            echo "SITE_URL=$site_url"
+            echo "BASE_PATH=$base_path"
+          } >> "$GITHUB_ENV"
+
+          {
+            echo "site-url=$site_url"
+            echo "base-path=$base_path"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Generate migration progress
+        if: github.event_name != 'pull_request'
+        run: bun run generate:migration-progress
+
+      - name: Validate committed migration progress
+        if: github.event_name == 'pull_request'
+        run: bun run validate:data
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Test
+        run: bun run test
+
+      - name: Validate migration progress JSON
+        run: bun run validate:data
+
+      - name: Build static site
+        run: bun run build
+
+      - name: Verify static output
+        run: |
+          test -f "$BUILD_DIR/index.html"
+          test -f "$BUILD_DIR/fork/index.html"
+          test -f "$BUILD_DIR/data/migration-progress.json"
+          ! grep -R -q "Source: Ethereum mainnet" "$BUILD_DIR"
+          if [[ -n "${ETH_RPC_URL:-}" ]] && grep -R -F -q "$ETH_RPC_URL" "$BUILD_DIR"; then
+            echo "Private ETH_RPC_URL leaked into static output."
+            exit 1
+          fi
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9
+        with:
+          path: ${{ env.BUILD_DIR }}
+
+  deploy:
+    needs: build
+    name: Deploy to GitHub Pages
+    if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128

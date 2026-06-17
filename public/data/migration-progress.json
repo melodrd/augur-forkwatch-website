@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "blockNumber": "25335083",
+  "chainId": 1,
+  "checkedAt": "2026-06-17T05:12:21.559Z",
+  "error": null,
+  "forkEndTime": 1785718859,
+  "lastSuccessAt": "2026-06-17T05:12:21.559Z",
+  "migratedPercent": 26.78,
+  "migratedRaw": "2946674861494239596308538",
+  "migratedRep": "2946674.861494239596308538",
+  "rpcInfo": {
+    "endpointLabel": "PublicNode",
+    "fallbacksAttempted": 0,
+    "latencyMs": 1628,
+    "sourceChainId": 1,
+    "sourceRpcHost": "ethereum-rpc.publicnode.com",
+    "sourceRpcId": "publicnode",
+    "sourceRpcLabel": "PublicNode",
+    "sourceRpcPublic": true
+  },
+  "source": "github-actions",
+  "status": "loaded",
+  "token": {
+    "address": "0xCf6A0A7826fa124B7705d6f3c675eAD76f1e540D",
+    "decimals": 18,
+    "label": "REP migrated",
+    "symbol": "REPv2_Yes_1"
+  },
+  "totalRep": "11000000"
+}

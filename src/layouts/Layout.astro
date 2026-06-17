@@ -1,0 +1,100 @@
+---
+import "@/styles/global.css";
+import { withBase } from "@/lib/utils";
+
+type Props = {
+  author?: string;
+  canonicalURL?: string;
+  description?: string;
+  keywords?: string[];
+  noindex?: boolean;
+  ogImage?: string;
+  ogType?: string;
+  title?: string;
+};
+
+const siteUrl = Astro.site || new URL(Astro.url.origin);
+const defaultCanonicalURL = new URL(Astro.url.pathname, siteUrl).href;
+const {
+  author = "Augur Project",
+  canonicalURL = defaultCanonicalURL,
+  description = "ForkWatch is a public REP holder safety and fork-status dashboard for the Augur reboot.",
+  keywords = [
+    "Augur",
+    "ForkWatch",
+    "REP",
+    "REP token",
+    "fork dashboard",
+    "prediction markets",
+    "Ethereum",
+  ],
+  noindex = false,
+  ogImage = "/favicon.svg",
+  ogType = "website",
+  title = "ForkWatch - Augur Fork Status",
+} = Astro.props;
+const absoluteOgImage = new URL(withBase(ogImage), siteUrl).href;
+const publisherUrl = new URL(withBase("/"), siteUrl).href;
+
+const structuredData = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "ForkWatch",
+  applicationCategory: "FinanceApplication",
+  description,
+  url: canonicalURL,
+  publisher: {
+    "@type": "Organization",
+    name: "Augur",
+    url: publisherUrl,
+  },
+});
+---
+
+<!doctype html>
+<html class="bg-background text-foreground" lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={author} />
+    <meta name="keywords" content={keywords.join(", ")} />
+    <link rel="canonical" href={canonicalURL} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={absoluteOgImage} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content="ForkWatch" />
+    <meta property="og:locale" content="en_US" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@AugurProject" />
+    <meta name="twitter:creator" content="@AugurProject" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={absoluteOgImage} />
+
+    <meta name="theme-color" content="#16A34A" />
+    <meta name="application-name" content="ForkWatch" />
+    <link rel="icon" type="image/svg+xml" href={withBase("/favicon.svg")} />
+    <link rel="apple-touch-icon" href={withBase("/favicon.svg")} />
+
+    <link rel="dns-prefetch" href="//etherscan.io" />
+    <link rel="dns-prefetch" href="//github.com" />
+
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={structuredData}
+    ></script>
+  </head>
+  <body class="min-h-screen bg-background text-foreground antialiased">
+    <div aria-hidden="true" class="grid-tunnel"></div>
+    <slot />
+  </body>
+</html>

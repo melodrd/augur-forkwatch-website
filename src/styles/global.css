@@ -1,0 +1,454 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@font-face {
+  font-family: "Handjet";
+  src: url("/fonts/handjet-thin.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 100;
+}
+
+@font-face {
+  font-family: "Handjet";
+  src: url("/fonts/handjet-light.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: "Handjet";
+  src: url("/fonts/handjet.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-light.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-regular.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 400;
+}
+
+:root {
+  color-scheme: dark;
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+  --loud-foreground: var(--color-loud-foreground);
+  --muted: var(--color-green-500);
+  --subtle: var(--color-muted-foreground);
+  --primary: var(--color-primary);
+  --panel: #0c100d;
+  --panel-elevated: #161a17;
+  --border: #173321;
+  --border-strong: #16a34a66;
+  --green: var(--color-primary);
+  --green-muted: var(--color-green-500);
+  --amber: var(--color-amber);
+  --orange: var(--color-orange);
+  --red: var(--color-red);
+  --shadow-color: 0 0 0;
+  --font-body: "IBM Plex Mono", monospace;
+  --font-display-family: "Handjet", sans-serif;
+  --font-ibm-plex-mono: "IBM Plex Mono", monospace;
+}
+
+@theme {
+  --color-primary: #16a34a;
+  --color-foreground: var(--color-green-600);
+  --color-muted-foreground: var(--color-green-800);
+  --color-loud-foreground: var(--color-green-400);
+  --color-background: #111111;
+  --color-green-500: #22c55e;
+  --color-yellow-400: #facc15;
+  --color-orange-400: #fb923c;
+  --color-red-500: #ef4444;
+
+  --color-panel: var(--panel);
+  --color-panel-elevated: var(--panel-elevated);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-muted: var(--color-green-500);
+  --color-subtle: var(--color-muted-foreground);
+  --color-green: var(--color-primary);
+  --color-green-muted: var(--color-green-500);
+  --color-amber: var(--color-yellow-400);
+  --color-orange: var(--color-orange-400);
+  --color-red: var(--color-red-500);
+
+  --default-font-family: "IBM Plex Mono", monospace;
+  --font-sans: "IBM Plex Mono", monospace;
+  --font-mono: "IBM Plex Mono", monospace;
+  --font-display: "Handjet", sans-serif;
+  --font-display-tracking: var(--tracking-wider);
+  --font-prose: "IBM Plex Mono", monospace;
+
+  --glow-size-xs: 0.1375rem;
+  --glow-size-sm: 0.25rem;
+  --glow-size: 0.375rem;
+  --glow-size-lg: 1rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--primary) 32%, transparent);
+  color: var(--background);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+:focus-visible {
+  outline: 1px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.grid-tunnel {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgb(17 17 17 / 0.2), rgb(17 17 17 / 0.88)),
+    repeating-linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--primary) 10%, transparent) 0,
+      color-mix(in srgb, var(--primary) 10%, transparent) 1px,
+      transparent 1px,
+      transparent 4.5rem
+    ),
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--primary) 9%, transparent) 0,
+      color-mix(in srgb, var(--primary) 9%, transparent) 1px,
+      transparent 1px,
+      transparent 4.5rem
+    );
+  opacity: 0.6;
+}
+
+.grid-tunnel::after {
+  position: absolute;
+  right: -8vw;
+  bottom: -18vh;
+  left: -8vw;
+  height: 64vh;
+  content: "";
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--primary) 24%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--primary) 24%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 4.5rem 3rem;
+  opacity: 0.45;
+  transform: perspective(360px) rotateX(62deg);
+  transform-origin: 50% 100%;
+  animation: grid-tunnel-drift 12s linear infinite;
+}
+
+.ambient-page {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  overflow-x: clip;
+  background:
+    linear-gradient(
+      180deg,
+      rgb(17 17 17 / 0.72) 0%,
+      rgb(17 17 17 / 0.5) 34%,
+      rgb(17 17 17 / 0.88) 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--primary) 5%, transparent) 0,
+      color-mix(in srgb, var(--primary) 5%, transparent) 1px,
+      transparent 1px,
+      transparent 4rem
+    ),
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--primary) 5%, transparent) 0,
+      color-mix(in srgb, var(--primary) 5%, transparent) 1px,
+      transparent 1px,
+      transparent 4rem
+    ), var(--background);
+}
+
+.ambient-page::before,
+.ambient-page::after {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+}
+
+.ambient-page::before {
+  background-image:
+    linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--primary) 14%, transparent) 50%,
+      transparent
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--background) 35%, transparent),
+      transparent 45%,
+      color-mix(in srgb, var(--background) 88%, transparent)
+    );
+  opacity: 0.58;
+}
+
+.ambient-page::after {
+  top: auto;
+  bottom: -16vh;
+  height: 64vh;
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--primary) 22%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--primary) 22%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 4.5rem 3rem;
+  opacity: 0.36;
+  transform: perspective(360px) rotateX(62deg);
+  transform-origin: 50% 100%;
+  animation: grid-tunnel-drift 12s linear infinite;
+}
+
+.visual-surface {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, transparent);
+  border-radius: 0;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--background) 84%, transparent),
+      color-mix(in srgb, var(--panel) 94%, transparent)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--primary) 5%, transparent) 0,
+      color-mix(in srgb, var(--primary) 5%, transparent) 1px,
+      transparent 1px,
+      transparent 3rem
+    );
+}
+
+.visual-card,
+.polished-card {
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--background) 74%, transparent);
+  box-shadow: none;
+  transition:
+    border-color 180ms ease-out,
+    color 180ms ease-out,
+    transform 180ms ease-out;
+}
+
+.visual-card:hover,
+.polished-card:hover {
+  border-color: color-mix(in srgb, var(--primary) 44%, transparent);
+  transform: translateY(-1px);
+}
+
+.btn-terminal-primary,
+.btn-terminal-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  font-family: var(--font-display-family);
+  font-size: 1.125rem;
+  font-weight: 400;
+  line-height: 1;
+  text-transform: uppercase;
+  transition:
+    background-color 180ms ease-out,
+    border-color 180ms ease-out,
+    color 180ms ease-out;
+}
+
+.btn-terminal-primary {
+  border: 1px solid color-mix(in srgb, var(--primary) 70%, transparent);
+  background: var(--primary);
+  color: var(--background);
+}
+
+.btn-terminal-primary:hover,
+.btn-terminal-primary:focus-visible {
+  background: color-mix(in srgb, var(--primary) 90%, var(--foreground));
+}
+
+.btn-terminal-secondary {
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+  color: var(--foreground);
+}
+
+.btn-terminal-secondary:hover,
+.btn-terminal-secondary:focus-visible {
+  border-color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  color: var(--loud-foreground);
+}
+
+.terminal-input {
+  border-radius: 0;
+  border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent);
+  background: color-mix(in srgb, var(--background) 86%, var(--panel));
+  color: var(--loud-foreground);
+}
+
+.terminal-input::placeholder {
+  color: color-mix(in srgb, var(--foreground) 52%, transparent);
+}
+
+.terminal-input:focus,
+.terminal-input:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--primary) 85%, white);
+}
+
+.menu-link {
+  position: relative;
+}
+
+.menu-link::before {
+  display: inline-block;
+  margin-right: 0.5rem;
+  color: var(--foreground);
+  content: ">";
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+}
+
+.menu-link:hover::before,
+.menu-link:focus::before {
+  opacity: 1;
+  animation: bounce-horizontal 1s ease-in-out infinite;
+}
+
+.fx-glow {
+  filter: drop-shadow(0 0 var(--glow-size, 0.375rem) var(--primary));
+}
+
+.fx-glow-xs {
+  filter: drop-shadow(0 0 var(--glow-size-xs, 0.1375rem) var(--primary));
+}
+
+.fx-glow-sm {
+  filter: drop-shadow(0 0 var(--glow-size-sm, 0.25rem) var(--primary));
+}
+
+.fx-glow-lg {
+  filter: drop-shadow(0 0 var(--glow-size-lg, 1rem) var(--primary));
+}
+
+@keyframes bounce-horizontal {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-8px);
+  }
+}
+
+@keyframes grid-tunnel-drift {
+  from {
+    background-position:
+      0 0,
+      0 0;
+  }
+  to {
+    background-position:
+      0 3rem,
+      4.5rem 0;
+  }
+}
+
+@keyframes pulse-glow-soft {
+  0%,
+  64% {
+    filter: drop-shadow(
+      0 0 0.2rem color-mix(in srgb, var(--primary) 48%, transparent)
+    );
+  }
+  78% {
+    filter: drop-shadow(
+      0 0 0.65rem color-mix(in srgb, var(--primary) 72%, transparent)
+    );
+  }
+  100% {
+    filter: drop-shadow(
+      0 0 0.2rem color-mix(in srgb, var(--primary) 48%, transparent)
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .ambient-page::after,
+  .grid-tunnel::after,
+  .menu-link:hover::before,
+  .menu-link:focus::before {
+    animation: none;
+  }
+
+  .visual-card,
+  .polished-card {
+    transition: border-color 180ms ease-out;
+  }
+
+  .visual-card:hover,
+  .polished-card:hover {
+    transform: none;
+  }
+}
