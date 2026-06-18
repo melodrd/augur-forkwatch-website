@@ -339,7 +339,7 @@ export function MigrationReadinessCard() {
                 !
               </span>
               <p className="font-display text-2xl uppercase leading-none">
-                Priority warning
+                Warning
               </p>
             </div>
             <p className="text-sm leading-6">
@@ -362,7 +362,7 @@ export function MigrationReadinessCard() {
 
           <div className="grid gap-2">
             <a
-              className="btn-terminal-primary min-h-10 px-4 py-2"
+              className="btn-terminal-secondary min-h-10 px-4 py-2"
               href="#check"
             >
               CHECK REP
@@ -371,10 +371,10 @@ export function MigrationReadinessCard() {
               className="btn-terminal-secondary min-h-10 px-4 py-2"
               href={OFFICIAL_MIGRATION_GUIDE_URL}
             >
-              Read migration instructions
+              Migration instructions
             </ExternalLinkWithWarning>
             <ExternalLinkWithWarning
-              className="btn-terminal-secondary min-h-10 px-4 py-2"
+              className="btn-terminal-primary min-h-10 px-4 py-2"
               href={OFFICIAL_MIGRATION_PAGE_URL}
             >
               Migration website

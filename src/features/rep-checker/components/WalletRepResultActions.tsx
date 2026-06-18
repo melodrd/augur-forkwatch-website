@@ -1,6 +1,10 @@
 import { useState } from "react";
+import { ExternalLinkWithWarning } from "@/components/ui/ExternalLinkWithWarning";
 import { SafetyDialog } from "@/components/ui/SafetyDialog";
-import { OFFICIAL_MIGRATION_GUIDE_URL } from "@/domain/migration/migration.constants";
+import {
+  OFFICIAL_MIGRATION_GUIDE_URL,
+  OFFICIAL_MIGRATION_PAGE_URL,
+} from "@/domain/migration/migration.constants";
 import { REP_CHECKER_GUIDE_WARNING } from "../rep-checker.copy";
 import type { WalletRepResultKind } from "../rep-checker.types";
 
@@ -25,6 +29,7 @@ export function WalletRepResultActions({
   onCheckAnother,
 }: WalletRepResultActionsProps) {
   const [isGuideWarningVisible, setIsGuideWarningVisible] = useState(false);
+  const showMigrationLinks = shouldShowGuide(kind);
 
   function handleConfirmGuide() {
     setIsGuideWarningVisible(false);
@@ -34,13 +39,13 @@ export function WalletRepResultActions({
   return (
     <div className="mt-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-        {shouldShowGuide(kind) ? (
+        {showMigrationLinks ? (
           <button
-            className="btn-terminal-primary min-h-10 px-4 py-2"
+            className="btn-terminal-secondary min-h-10 px-4 py-2"
             onClick={() => setIsGuideWarningVisible(true)}
             type="button"
           >
-            Open official migration guide
+            Migration instructions
           </button>
         ) : null}
         <button
@@ -50,6 +55,14 @@ export function WalletRepResultActions({
         >
           Check another address
         </button>
+        {showMigrationLinks ? (
+          <ExternalLinkWithWarning
+            className="btn-terminal-primary min-h-10 px-4 py-2"
+            href={OFFICIAL_MIGRATION_PAGE_URL}
+          >
+            Migration website
+          </ExternalLinkWithWarning>
+        ) : null}
       </div>
 
       <SafetyDialog

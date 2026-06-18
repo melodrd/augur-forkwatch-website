@@ -1,4 +1,3 @@
-import { calculateMigrationProgressFreshness } from "@/features/migration/migration-progress.helpers";
 import { useMigrationProgress } from "@/features/migration/useMigrationProgress";
 import { formatDurationSince, formatTimestamp } from "@/lib/date-format";
 import { formatNumber, formatPercent } from "@/lib/format";
@@ -43,20 +42,7 @@ function getStatusMessage(
     return "Migration progress is temporarily unavailable. ForkWatch could not read Ethereum mainnet during the latest scheduled update.";
   }
 
-  const freshness = calculateMigrationProgressFreshness(progress);
-
-  if (freshness === "fresh") {
-    return null;
-  }
-
-  const staleReference = progress.lastSuccessAt ?? progress.checkedAt;
-  const duration = formatDurationSince(staleReference);
-
-  if (!duration) {
-    return "Migration progress may be stale.";
-  }
-
-  return `Migration progress may be stale. The last successful Ethereum read was ${duration} ago.`;
+  return null;
 }
 
 export function RepMigrationProgressBar() {
