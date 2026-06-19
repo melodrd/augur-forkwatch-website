@@ -78,7 +78,7 @@ export function ExchangeSupportSection() {
               />
             </div>
 
-            <div className="mt-auto pt-5">
+            <div className="mt-5">
               <p className="font-display text-lg uppercase leading-none text-foreground/70">
                 Tracked exchanges
               </p>
