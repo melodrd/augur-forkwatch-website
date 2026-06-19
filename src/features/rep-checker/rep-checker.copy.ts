@@ -72,7 +72,7 @@ export const REP_CHECKER_RESULT_COPY: Record<
   },
   repv2Yes1: {
     body: withRepCheckerMigrationGuideHint(
-      "This address holds ForkWatch's configured destination REP token, displayed here as REPv2_Yes_1 and reported by the token contract as REPv2_Yes_1. Confirm with official tools and trusted block explorers before relying on this result.",
+      "This address holds REPv2_Yes_1. Migration appears successful, but check trusted block explorers and other sources before relying on this result.",
     ),
     title: "Configured destination REP found",
   },
