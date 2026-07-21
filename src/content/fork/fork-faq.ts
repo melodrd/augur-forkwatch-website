@@ -3,33 +3,21 @@ import {
   OFFICIAL_MIGRATION_PAGE_URL,
 } from "@/domain/migration/migration.constants";
 
-export type ForkFaqCardModel = {
-  answer: string;
-  ctaHref?: string;
-  ctaLabel?: string;
-  question: string;
-};
-
-export const forkFaqCards: ForkFaqCardModel[] = [
+// Locale-agnostic FAQ data: stable ids and CTA URLs. The question, answer, and
+// CTA label text live in the i18n dictionaries keyed by `id`.
+export const forkFaqCards = [
   {
-    answer:
-      "Augur’s oracle is entering a fork. REP holders decide the winning universe by moving REP into the outcome they believe is valid.",
+    id: "what-is-happening",
     ctaHref: "https://www.augur.net/blog/the-augur-fork-is-here/",
-    ctaLabel: "Official fork announcement",
-    question: "What is happening?",
   },
   {
-    answer:
-      "If you hold REPv1 or REPv2, move it to a self-custody wallet and complete migration before the deadline, or your REP can become unrecoverable.",
+    id: "what-to-do",
     ctaHref: OFFICIAL_MIGRATION_GUIDE_URL,
-    ctaLabel: "Migration instructions",
-    question: "What should I do?",
   },
   {
-    answer:
-      "Critical. The migration window is open now. Check your wallet for REPv1 or REPv2, read the instructions, and migrate before the cutoff so your REP does not become worthless.",
+    id: "how-urgent",
     ctaHref: OFFICIAL_MIGRATION_PAGE_URL,
-    ctaLabel: "Migration website",
-    question: "How urgent is this?",
   },
-];
+] as const;
+
+export type ForkFaqId = (typeof forkFaqCards)[number]["id"];

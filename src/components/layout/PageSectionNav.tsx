@@ -1,4 +1,6 @@
 import { type MouseEvent, useEffect, useRef, useState } from "react";
+import { getCopy } from "@/i18n";
+import type { Locale } from "@/i18n/locales";
 
 export type SectionNavItem = {
   href: string;
@@ -8,6 +10,7 @@ export type SectionNavItem = {
 
 type PageSectionNavProps = {
   ariaLabel?: string;
+  locale?: Locale;
   sections: readonly SectionNavItem[];
 };
 
@@ -68,9 +71,12 @@ function getCurrentSectionId(
 }
 
 export function PageSectionNav({
-  ariaLabel = "Page sections",
+  ariaLabel,
+  locale = "en",
   sections,
 }: PageSectionNavProps) {
+  const resolvedAriaLabel =
+    ariaLabel ?? getCopy(locale).header.sectionNavAriaLabel;
   const navRef = useRef<HTMLElement>(null);
   const requestedSectionRef = useRef<string | null>(null);
   const releaseRequestedSectionTimeoutRef = useRef<number | null>(null);
@@ -166,7 +172,7 @@ export function PageSectionNav({
 
   return (
     <nav
-      aria-label={ariaLabel}
+      aria-label={resolvedAriaLabel}
       className="border-t border-primary/10 py-2"
       ref={navRef}
     >

@@ -5,11 +5,13 @@ import {
   OFFICIAL_MIGRATION_GUIDE_URL,
   OFFICIAL_MIGRATION_PAGE_URL,
 } from "@/domain/migration/migration.constants";
-import { REP_CHECKER_GUIDE_WARNING } from "../rep-checker.copy";
+import { getCopy } from "@/i18n";
+import type { Locale } from "@/i18n/locales";
 import type { WalletRepResultKind } from "../rep-checker.types";
 
 type WalletRepResultActionsProps = {
   kind: WalletRepResultKind;
+  locale: Locale;
   onCheckAnother: () => void;
 };
 
@@ -26,10 +28,17 @@ function shouldShowGuide(kind: WalletRepResultKind): boolean {
 
 export function WalletRepResultActions({
   kind,
+  locale,
   onCheckAnother,
 }: WalletRepResultActionsProps) {
+  const copy = getCopy(locale).repChecker;
   const [isGuideWarningVisible, setIsGuideWarningVisible] = useState(false);
   const showMigrationLinks = shouldShowGuide(kind);
+  const guideWarnings = [
+    copy.guideWarning.verifyUrl,
+    copy.guideWarning.neverShareSecrets,
+    copy.guideWarning.startFromBookmark,
+  ];
 
   function handleConfirmGuide() {
     setIsGuideWarningVisible(false);
@@ -45,7 +54,7 @@ export function WalletRepResultActions({
             onClick={() => setIsGuideWarningVisible(true)}
             type="button"
           >
-            Migration instructions
+            {copy.actions.migrationInstructions}
           </button>
         ) : null}
         <button
@@ -53,21 +62,22 @@ export function WalletRepResultActions({
           onClick={onCheckAnother}
           type="button"
         >
-          Check another address
+          {copy.actions.checkAnother}
         </button>
         {showMigrationLinks ? (
           <ExternalLinkWithWarning
             className="btn-terminal-primary min-h-10 px-4 py-2"
             href={OFFICIAL_MIGRATION_PAGE_URL}
+            locale={locale}
           >
-            Migration website
+            {copy.actions.migrationWebsite}
           </ExternalLinkWithWarning>
         ) : null}
       </div>
 
       <SafetyDialog
-        confirmLabel="I understand"
-        description={REP_CHECKER_GUIDE_WARNING.map((message) => (
+        confirmLabel={copy.guideDialog.confirmLabel}
+        description={guideWarnings.map((message) => (
           <p
             className="border border-primary/35 bg-primary/10 px-3 py-3 text-sm leading-6 text-loud-foreground"
             key={message}
@@ -75,11 +85,12 @@ export function WalletRepResultActions({
             {message}
           </p>
         ))}
-        eyebrow=">_ Scam check"
+        eyebrow={copy.guideDialog.eyebrow}
+        locale={locale}
         onCancel={() => setIsGuideWarningVisible(false)}
         onConfirm={handleConfirmGuide}
         open={isGuideWarningVisible}
-        title="Pause and verify before connecting"
+        title={copy.guideDialog.title}
       />
     </div>
   );

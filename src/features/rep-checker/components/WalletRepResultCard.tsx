@@ -1,10 +1,8 @@
+import { getCopy } from "@/i18n";
+import type { SiteCopy } from "@/i18n/copy/types";
+import type { Locale } from "@/i18n/locales";
 import { formatDate } from "@/lib/format";
 import type { WalletRepCheckerStatus } from "../hooks/use-wallet-rep-checker";
-import {
-  REP_CHECKER_RESULT_COPY,
-  REP_CHECKER_SCOPE_DISCLAIMER,
-  withRepCheckerMigrationGuideHint,
-} from "../rep-checker.copy";
 import {
   getWalletRepResultKind,
   isRepBalanceCheckResult,
@@ -15,6 +13,8 @@ import type {
 } from "../rep-checker.types";
 import { WalletRepBalanceSummary } from "./WalletRepBalanceSummary";
 import { WalletRepResultActions } from "./WalletRepResultActions";
+
+type RepCheckerCopy = SiteCopy["repChecker"];
 
 const resultFrameClasses: Record<WalletRepResultKind, string> = {
   both: "border-primary/40 bg-background/70",
@@ -29,6 +29,7 @@ const resultFrameClasses: Record<WalletRepResultKind, string> = {
 
 type WalletRepResultCardProps = {
   error: string | null;
+  locale: Locale;
   result: RepBalanceCheckResponse | null;
   status: WalletRepCheckerStatus;
   onReset: () => void;
@@ -53,52 +54,52 @@ function ResultNotice({
   );
 }
 
-function RepMigrationWarning({ children }: { children: string }) {
+function RepMigrationWarning({
+  children,
+  label,
+}: {
+  children: string;
+  label: string;
+}) {
   return (
     <div className="mt-4 border border-red/35 bg-red/10 px-3 py-2 text-sm leading-6 text-red">
       <p className="font-display text-sm uppercase leading-none">
-        &gt;_ Warning
+        &gt;_ {label}
       </p>
       <p className="mt-1">{children}</p>
     </div>
   );
 }
 
-function ScopeWarningNotice({ children }: { children: string }) {
+function ScopeWarningNotice({ copy }: { copy: RepCheckerCopy }) {
   return (
     <div className="mt-5 border border-amber/40 bg-amber/10 p-4">
       <p className="font-display text-xl uppercase leading-none text-amber">
-        &gt;_ Scope note
+        &gt;_ {copy.scopeNote.eyebrow}
       </p>
-      <p className="mt-2 max-w-3xl text-sm leading-6 text-amber">{children}</p>
+      <p className="mt-2 max-w-3xl text-sm leading-6 text-amber">
+        {copy.scopeNote.body}
+      </p>
       <p className="mt-2 max-w-3xl text-xs leading-5 text-amber/80">
-        Double-check with trusted sources before taking action. This tool is
-        provided for informational use only, and we are not liable for losses,
-        including lost REP.{" "}
-        {withRepCheckerMigrationGuideHint(
-          "Check migration guide for more details.",
-        )}
+        {copy.scopeNote.liability}
       </p>
     </div>
   );
 }
 
-function CheckingState() {
+function CheckingState({ copy }: { copy: RepCheckerCopy }) {
   return (
     <article className="border border-primary/10 bg-background/70 p-4">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="font-display text-xl uppercase leading-none text-muted-foreground">
-            &gt;_ Checking
+            &gt;_ {copy.checking.eyebrow}
           </p>
           <h3 className="mt-2 font-display text-3xl uppercase leading-none text-foreground">
-            Reading Ethereum mainnet
+            {copy.checking.title}
           </h3>
           <p className="mt-2 text-sm leading-6 text-foreground/80">
-            Checking the address for REPv1 and REPv2 balances.{" "}
-            {withRepCheckerMigrationGuideHint(
-              "Check migration guide for more details.",
-            )}
+            {copy.checking.body}
           </p>
         </div>
       </div>
@@ -108,12 +109,15 @@ function CheckingState() {
 
 export function WalletRepResultCard({
   error,
+  locale,
   onReset,
   result,
   status,
 }: WalletRepResultCardProps) {
+  const copy = getCopy(locale).repChecker;
+
   if (status === "checking") {
-    return <CheckingState />;
+    return <CheckingState copy={copy} />;
   }
 
   if (!result) {
@@ -121,32 +125,34 @@ export function WalletRepResultCard({
   }
 
   const kind = getWalletRepResultKind(result);
-  const copy = REP_CHECKER_RESULT_COPY[kind];
-  const body = copy.body ?? error;
+  const resultCopy = copy.results[kind];
+  const body = resultCopy.body ?? error;
 
   return (
     <article className={`border p-4 sm:p-5 ${resultFrameClasses[kind]}`}>
       <div>
         <h3 className="font-display text-3xl uppercase leading-none text-foreground">
-          &gt;_ {copy.title}
+          &gt;_ {resultCopy.title}
         </h3>
-        {copy.warning ? (
-          <RepMigrationWarning>{copy.warning}</RepMigrationWarning>
+        {resultCopy.warning ? (
+          <RepMigrationWarning label={copy.warningLabel}>
+            {resultCopy.warning}
+          </RepMigrationWarning>
         ) : null}
-        {copy.action ? (
-          <ResultNotice title="Deadline action">{copy.action}</ResultNotice>
+        {resultCopy.action ? (
+          <ResultNotice title={copy.resultNotice.deadlineAction}>
+            {resultCopy.action}
+          </ResultNotice>
         ) : null}
-        {kind === "none" ? (
-          <ScopeWarningNotice>
-            {withRepCheckerMigrationGuideHint(REP_CHECKER_SCOPE_DISCLAIMER)}
-          </ScopeWarningNotice>
+        {kind === "none" ? <ScopeWarningNotice copy={copy} /> : null}
+        {body ? (
+          <ResultNotice title={copy.resultNotice.details}>{body}</ResultNotice>
         ) : null}
-        {body ? <ResultNotice title="Details">{body}</ResultNotice> : null}
       </div>
 
       <dl className="mt-5 border border-primary/10 bg-background/70 p-3 sm:grid sm:grid-cols-[7rem_1fr] sm:gap-3">
         <dt className="font-display text-lg uppercase leading-none text-muted-foreground">
-          Address
+          {copy.addressField}
         </dt>
         <dd className="mt-1 min-w-0 font-mono text-sm text-loud-foreground sm:mt-0">
           <span className="break-all" title={result.address}>
@@ -156,17 +162,23 @@ export function WalletRepResultCard({
       </dl>
 
       {isRepBalanceCheckResult(result) ? (
-        <WalletRepBalanceSummary result={result} />
+        <WalletRepBalanceSummary locale={locale} result={result} />
       ) : null}
 
       {isRepBalanceCheckResult(result) ? (
         <p className="mt-4 font-mono text-[0.68rem] text-muted-foreground">
-          Checked {formatDate(result.checkedAt)} through{" "}
-          {result.rpcInfo.endpoint}.
+          {copy.checkedThrough({
+            date: formatDate(result.checkedAt, locale),
+            endpoint: result.rpcInfo.endpoint,
+          })}
         </p>
       ) : null}
 
-      <WalletRepResultActions kind={kind} onCheckAnother={onReset} />
+      <WalletRepResultActions
+        kind={kind}
+        locale={locale}
+        onCheckAnother={onReset}
+      />
     </article>
   );
 }

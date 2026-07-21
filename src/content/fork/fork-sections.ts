@@ -1,6 +1,8 @@
 export const forkSections = [
-  { href: "#overview", id: "overview", label: "Overview" },
-  { href: "#scam-warning", id: "scam-warning", label: "Scam Warning" },
-  { href: "#exchange-support", id: "exchange-support", label: "Exchanges" },
-  { href: "#check", id: "check", label: "Check REP" },
+  { href: "#overview", id: "overview" },
+  { href: "#scam-warning", id: "scam-warning" },
+  { href: "#exchange-support", id: "exchange-support" },
+  { href: "#check", id: "check" },
 ] as const;
+
+export type ForkSectionId = (typeof forkSections)[number]["id"];

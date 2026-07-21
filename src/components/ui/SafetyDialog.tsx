@@ -1,11 +1,14 @@
 import { type ReactNode, useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
+import { getCopy } from "@/i18n";
+import type { Locale } from "@/i18n/locales";
 
 type SafetyDialogProps = {
   cancelLabel?: string;
   confirmLabel: string;
   description: ReactNode;
   eyebrow?: string;
+  locale: Locale;
   open: boolean;
   title: string;
   onCancel: () => void;
@@ -13,15 +16,19 @@ type SafetyDialogProps = {
 };
 
 export function SafetyDialog({
-  cancelLabel = "Cancel",
+  cancelLabel,
   confirmLabel,
   description,
-  eyebrow = ">_ External link check",
+  eyebrow,
+  locale,
   open,
   title,
   onCancel,
   onConfirm,
 }: SafetyDialogProps) {
+  const copy = getCopy(locale).safetyDialog;
+  const resolvedCancelLabel = cancelLabel ?? copy.cancelLabel;
+  const resolvedEyebrow = eyebrow ?? copy.eyebrow;
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement | null>(null);
 
@@ -93,7 +100,7 @@ export function SafetyDialog({
   return createPortal(
     <div className="fixed inset-0 z-[70] flex items-center justify-center px-4 py-6">
       <button
-        aria-label={`Close ${title}`}
+        aria-label={copy.closeAriaLabel(title)}
         className="absolute inset-0 cursor-default bg-background/82"
         onMouseDown={onCancel}
         tabIndex={-1}
@@ -108,7 +115,7 @@ export function SafetyDialog({
         tabIndex={-1}
       >
         <p className="font-display text-xl uppercase leading-none text-muted-foreground">
-          {eyebrow}
+          &gt;_ {resolvedEyebrow}
         </p>
         <h4
           className="mt-2 font-display text-3xl uppercase leading-none text-foreground"
@@ -130,7 +137,7 @@ export function SafetyDialog({
             onClick={onCancel}
             type="button"
           >
-            {cancelLabel}
+            {resolvedCancelLabel}
           </button>
         </div>
       </div>

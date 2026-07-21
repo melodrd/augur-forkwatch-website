@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from "react";
+import { getCopy } from "@/i18n";
+import type { Locale } from "@/i18n/locales";
 
 type ExchangeSupportDisclosureProps = {
   body: string;
+  locale: Locale;
   title: string;
 };
 
 export function ExchangeSupportDisclosure({
   body,
+  locale,
   title,
 }: ExchangeSupportDisclosureProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -42,7 +46,7 @@ export function ExchangeSupportDisclosure({
     <div className="absolute right-3 top-3" ref={rootRef}>
       <button
         aria-expanded={isOpen}
-        aria-label={`Explain: ${title}`}
+        aria-label={getCopy(locale).exchangeSupport.explainAriaLabel(title)}
         className="flex size-8 cursor-pointer items-center justify-center border border-current/35 bg-background/80 font-display text-xl uppercase leading-none outline-none transition hover:border-current hover:bg-background hover:text-current focus-visible:border-current"
         onClick={() => setIsOpen((current) => !current)}
         type="button"

@@ -1,3 +1,4 @@
+import type { Locale } from "@/i18n/locales";
 import { useWalletRepChecker } from "../hooks/use-wallet-rep-checker";
 import { WalletRepCheckerForm } from "./WalletRepCheckerForm";
 import { WalletRepCheckerTitle } from "./WalletRepCheckerTitle";
@@ -5,11 +6,15 @@ import { WalletRepResultCard } from "./WalletRepResultCard";
 import { WalletRepScopeNotice } from "./WalletRepScopeNotice";
 
 type WalletRepCheckerProps = {
+  locale: Locale;
   showTitle?: boolean;
 };
 
-export function WalletRepChecker({ showTitle = true }: WalletRepCheckerProps) {
-  const checker = useWalletRepChecker();
+export function WalletRepChecker({
+  locale,
+  showTitle = true,
+}: WalletRepCheckerProps) {
+  const checker = useWalletRepChecker(locale);
 
   return (
     <section
@@ -17,8 +22,8 @@ export function WalletRepChecker({ showTitle = true }: WalletRepCheckerProps) {
       id="wallet-check"
     >
       <div className="w-full">
-        {showTitle ? <WalletRepCheckerTitle /> : null}
-        <WalletRepScopeNotice />
+        {showTitle ? <WalletRepCheckerTitle locale={locale} /> : null}
+        <WalletRepScopeNotice locale={locale} />
       </div>
 
       <WalletRepCheckerForm
@@ -26,6 +31,7 @@ export function WalletRepChecker({ showTitle = true }: WalletRepCheckerProps) {
         fieldError={checker.fieldError}
         inputRef={checker.inputRef}
         isChecking={checker.isChecking}
+        locale={locale}
         onAddressInputChange={checker.setAddressInput}
         onSubmit={checker.submit}
       />
@@ -39,6 +45,7 @@ export function WalletRepChecker({ showTitle = true }: WalletRepCheckerProps) {
         >
           <WalletRepResultCard
             error={checker.error}
+            locale={locale}
             onReset={checker.reset}
             result={checker.result}
             status={checker.status}

@@ -12,8 +12,8 @@ import {
   getEthereumRpcSourceInfo,
 } from "@/domain/ethereum/rpc-endpoints";
 import { REP_TOKEN_LIST, type RepToken } from "@/domain/tokens/rep-tokens";
+import { getCopy } from "@/i18n";
 import { readErc20BalanceOf } from "@/services/ethereum/erc20";
-import { REP_CHECKER_RPC_ERROR_MESSAGE } from "./rep-checker.copy";
 import {
   deriveStatusFromBalances,
   formatRepBalance,
@@ -28,9 +28,21 @@ import type {
 const REP_CHECKER_RPC_TIMEOUT_MS = 10_000;
 const ETHEREUM_MAINNET_CHAIN_ID = 1;
 
+/**
+ * Localized, user-facing messages the balance check can surface. Defaults to
+ * English so callers (and tests) that omit them keep the existing behavior.
+ */
+export type RepCheckerClientMessages = {
+  invalidAddress: string;
+  rpcError: string;
+  tokenReadError: string;
+  balanceUnavailable: string;
+};
+
 type CheckWalletRepOptions = {
   createClient?: (endpoint: EthereumRpcEndpoint) => PublicClient;
   endpoints?: readonly EthereumRpcEndpoint[];
+  messages?: RepCheckerClientMessages;
   now?: () => Date;
   readBalance?: (
     client: PublicClient,
@@ -47,6 +59,10 @@ function createRepCheckerClient(endpoint: EthereumRpcEndpoint): PublicClient {
       timeout: REP_CHECKER_RPC_TIMEOUT_MS,
     }),
   });
+}
+
+function englishMessages(): RepCheckerClientMessages {
+  return getCopy("en").repChecker.messages;
 }
 
 async function readRepTokenBalance(
@@ -74,14 +90,17 @@ async function readRepTokenBalance(
   };
 }
 
-function failedRepTokenBalance(tokenConfig: RepToken): RepTokenBalance {
+function failedRepTokenBalance(
+  tokenConfig: RepToken,
+  messages: RepCheckerClientMessages,
+): RepTokenBalance {
   return {
-    balance: "Unavailable",
+    balance: messages.balanceUnavailable,
     balanceRaw: null,
     chainId: tokenConfig.chainId,
     chainName: tokenConfig.chainName,
     decimals: tokenConfig.decimals,
-    error: "Could not read this token balance.",
+    error: messages.tokenReadError,
     hasBalance: false,
     readStatus: "error",
     token: tokenConfig.symbol,
@@ -89,11 +108,15 @@ function failedRepTokenBalance(tokenConfig: RepToken): RepTokenBalance {
   };
 }
 
-function rpcError(address: string, checkedAt: string): RepBalanceCheckError {
+function rpcError(
+  address: string,
+  checkedAt: string,
+  messages: RepCheckerClientMessages,
+): RepBalanceCheckError {
   return {
     address,
     checkedAt,
-    message: REP_CHECKER_RPC_ERROR_MESSAGE,
+    message: messages.rpcError,
     status: "error",
   };
 }
@@ -102,8 +125,12 @@ export async function checkWalletRep(
   inputAddress: string,
   options: CheckWalletRepOptions = {},
 ): Promise<RepBalanceCheckResult | RepBalanceCheckError> {
+  const messages = options.messages ?? englishMessages();
   const checkedAt = (options.now?.() ?? new Date()).toISOString();
-  const normalizedInput = normalizeAddressInput(inputAddress);
+  const normalizedInput = normalizeAddressInput(
+    inputAddress,
+    messages.invalidAddress,
+  );
 
   if (!normalizedInput.ok) {
     return {
@@ -136,7 +163,7 @@ export async function checkWalletRep(
       const balances = balanceResults.map((result, resultIndex) =>
         result.status === "fulfilled"
           ? result.value
-          : failedRepTokenBalance(REP_TOKEN_LIST[resultIndex]),
+          : failedRepTokenBalance(REP_TOKEN_LIST[resultIndex], messages),
       );
 
       if (balances.every((balance) => balance.readStatus === "error")) {
@@ -164,5 +191,5 @@ export async function checkWalletRep(
     } catch {}
   }
 
-  return rpcError(normalizedInput.address, checkedAt);
+  return rpcError(normalizedInput.address, checkedAt, messages);
 }

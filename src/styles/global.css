@@ -54,9 +54,15 @@
   --orange: var(--color-orange);
   --red: var(--color-red);
   --shadow-color: 0 0 0;
-  --font-body: "IBM Plex Mono", monospace;
-  --font-display-family: "Handjet", sans-serif;
-  --font-ibm-plex-mono: "IBM Plex Mono", monospace;
+  --font-body:
+    "IBM Plex Mono", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    monospace;
+  --font-display-family:
+    "Handjet", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    sans-serif;
+  --font-ibm-plex-mono:
+    "IBM Plex Mono", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    monospace;
 }
 
 @theme {
@@ -82,12 +88,22 @@
   --color-orange: var(--color-orange-400);
   --color-red: var(--color-red-500);
 
-  --default-font-family: "IBM Plex Mono", monospace;
-  --font-sans: "IBM Plex Mono", monospace;
-  --font-mono: "IBM Plex Mono", monospace;
-  --font-display: "Handjet", sans-serif;
+  --default-font-family:
+    "IBM Plex Mono", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    monospace;
+  --font-sans:
+    "IBM Plex Mono", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    monospace;
+  --font-mono:
+    "IBM Plex Mono", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    monospace;
+  --font-display:
+    "Handjet", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    sans-serif;
   --font-display-tracking: var(--tracking-wider);
-  --font-prose: "IBM Plex Mono", monospace;
+  --font-prose:
+    "IBM Plex Mono", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    monospace;
 
   --glow-size-xs: 0.1375rem;
   --glow-size-sm: 0.25rem;

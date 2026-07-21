@@ -1,81 +1,117 @@
 import { useMigrationProgress } from "@/features/migration/useMigrationProgress";
+import { getCopy } from "@/i18n";
+import type { SiteCopy } from "@/i18n/copy/types";
+import type { Locale } from "@/i18n/locales";
 import { formatDurationSince, formatTimestamp } from "@/lib/date-format";
 import { formatNumber, formatPercent } from "@/lib/format";
 
-function formatRepAmount(value: string | null | undefined): string {
+type ProgressBarCopy = SiteCopy["progressBar"];
+
+function formatRepAmount(
+  value: string | null | undefined,
+  copy: ProgressBarCopy,
+  locale: Locale,
+): string {
   if (!value) {
-    return "Progress unavailable";
+    return copy.progressUnavailable;
   }
 
   const numericValue = Number(value);
 
   if (!Number.isFinite(numericValue)) {
-    return "Progress unavailable";
+    return copy.progressUnavailable;
   }
 
-  return `${formatNumber(numericValue, {
-    maximumFractionDigits: numericValue >= 1_000 ? 0 : 2,
-  })} REP`;
+  return `${formatNumber(
+    numericValue,
+    { maximumFractionDigits: numericValue >= 1_000 ? 0 : 2 },
+    locale,
+  )} REP`;
 }
 
 function getStatusMessage(
   state: ReturnType<typeof useMigrationProgress>,
+  copy: SiteCopy,
 ): string | null {
+  const progressCopy = copy.progressBar;
+
   if (state.status === "loading") {
-    return "Loading migration progress from the latest scheduled update.";
+    return progressCopy.loadingStatus;
   }
 
   if (state.status === "unavailable") {
-    return "Migration progress is temporarily unavailable. ForkWatch could not read the static migration progress file.";
+    return progressCopy.fileUnavailable;
   }
 
   const { progress } = state;
 
   if (progress.status === "error") {
     if (progress.lastSuccessAt && progress.migratedPercent !== null) {
-      const duration = formatDurationSince(progress.lastSuccessAt);
+      const duration = formatDurationSince(
+        progress.lastSuccessAt,
+        Date.now(),
+        copy.duration,
+      );
       return duration
-        ? `The latest scheduled Ethereum read failed. Showing the last successful read from ${duration} ago.`
-        : "The latest scheduled Ethereum read failed. Showing the last successful read.";
+        ? progressCopy.readFailedWithDuration(duration)
+        : progressCopy.readFailed;
     }
 
-    return "Migration progress is temporarily unavailable. ForkWatch could not read Ethereum mainnet during the latest scheduled update.";
+    return progressCopy.ethReadUnavailable;
   }
 
   return null;
 }
 
-export function RepMigrationProgressBar() {
+type RepMigrationProgressBarProps = {
+  locale: Locale;
+};
+
+export function RepMigrationProgressBar({
+  locale,
+}: RepMigrationProgressBarProps) {
+  const copy = getCopy(locale);
+  const progressCopy = copy.progressBar;
   const state = useMigrationProgress();
   const progress = state.status === "ready" ? state.progress : null;
   const barPercent = progress?.migratedPercent ?? 0;
-  const migratedLabel = formatRepAmount(progress?.migratedRep);
-  const totalSupplyLabel = formatRepAmount(progress?.totalRep);
+  const migratedLabel = formatRepAmount(
+    progress?.migratedRep,
+    progressCopy,
+    locale,
+  );
+  const totalSupplyLabel = formatRepAmount(
+    progress?.totalRep,
+    progressCopy,
+    locale,
+  );
   const percentLabel =
     state.status === "loading"
-      ? "Loading..."
+      ? progressCopy.loading
       : progress?.migratedPercent === null ||
           progress?.migratedPercent === undefined
-        ? "Progress unavailable"
-        : formatPercent(progress.migratedPercent);
+        ? progressCopy.progressUnavailable
+        : formatPercent(progress.migratedPercent, {}, locale);
   const progressDescription =
     progress?.migratedPercent === null ||
     progress?.migratedPercent === undefined
-      ? "Progress unavailable"
-      : `${formatPercent(progress.migratedPercent)} of total REP supply migrated`;
-  const statusMessage = getStatusMessage(state);
+      ? progressCopy.progressUnavailable
+      : progressCopy.progressDescription(
+          formatPercent(progress.migratedPercent, {}, locale),
+        );
+  const statusMessage = getStatusMessage(state, copy);
   const lastCheckedLabel =
     progress === null
-      ? "Last checked: Pending"
-      : `Last checked: ${formatTimestamp(progress.checkedAt)}`;
+      ? progressCopy.lastCheckedPending
+      : progressCopy.lastChecked(formatTimestamp(progress.checkedAt, locale));
 
   return (
-    <aside aria-label="REP migrated" className="visual-card p-4">
+    <aside aria-label={progressCopy.ariaLabel} className="visual-card p-4">
       <div className="grid gap-4 lg:grid-cols-[minmax(12rem,18rem)_minmax(0,1fr)] lg:items-end">
         <div className="min-w-0">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between lg:flex-col">
             <p className="font-display text-xl uppercase leading-none text-muted-foreground">
-              &gt;_ REP migrated
+              &gt;_ {progressCopy.eyebrow}
             </p>
             <div className="font-mono text-xs text-muted-foreground">
               <p>{lastCheckedLabel}</p>

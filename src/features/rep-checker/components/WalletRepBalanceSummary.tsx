@@ -1,11 +1,17 @@
+import { getCopy } from "@/i18n";
+import type { Locale } from "@/i18n/locales";
 import { formatAddress } from "@/lib/format";
 import type { RepBalanceCheckResult } from "../rep-checker.types";
 
 export function WalletRepBalanceSummary({
+  locale,
   result,
 }: {
+  locale: Locale;
   result: RepBalanceCheckResult;
 }) {
+  const tokenReadError = getCopy(locale).repChecker.messages.tokenReadError;
+
   return (
     <dl className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {result.balances.map((balance) => (
@@ -23,7 +29,7 @@ export function WalletRepBalanceSummary({
           </dd>
           {balance.readStatus === "error" ? (
             <dd className="mt-2 text-xs leading-5 text-amber">
-              {balance.error ?? "Token balance unavailable."}
+              {balance.error ?? tokenReadError}
             </dd>
           ) : null}
           <dd

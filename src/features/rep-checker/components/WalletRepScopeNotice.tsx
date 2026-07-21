@@ -1,9 +1,17 @@
-import { REP_CHECKER_SCOPE_CARDS } from "../rep-checker.copy";
+import { getCopy } from "@/i18n";
+import type { Locale } from "@/i18n/locales";
 
-export function WalletRepScopeNotice() {
+type WalletRepScopeNoticeProps = {
+  locale: Locale;
+};
+
+export function WalletRepScopeNotice({ locale }: WalletRepScopeNoticeProps) {
+  const { scopeCards } = getCopy(locale).repChecker;
+  const cards = [scopeCards.whyItMatters, scopeCards.scope, scopeCards.warning];
+
   return (
     <div className="mt-3 grid gap-3 md:grid-cols-3">
-      {REP_CHECKER_SCOPE_CARDS.map((card) => (
+      {cards.map((card) => (
         <div
           className="border border-primary/10 bg-background/70 px-3 py-2"
           key={card.title}

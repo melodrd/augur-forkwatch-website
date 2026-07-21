@@ -1,10 +1,13 @@
 import { type RefObject, type SyntheticEvent, useId } from "react";
+import { getCopy } from "@/i18n";
+import type { Locale } from "@/i18n/locales";
 
 type WalletRepCheckerFormProps = {
   addressInput: string;
   fieldError: string | null;
   inputRef: RefObject<HTMLInputElement | null>;
   isChecking: boolean;
+  locale: Locale;
   onAddressInputChange: (address: string) => void;
   onSubmit: (event: SyntheticEvent<HTMLFormElement>) => void;
 };
@@ -14,9 +17,11 @@ export function WalletRepCheckerForm({
   fieldError,
   inputRef,
   isChecking,
+  locale,
   onAddressInputChange,
   onSubmit,
 }: WalletRepCheckerFormProps) {
+  const copy = getCopy(locale).repChecker;
   const inputId = useId();
   const errorId = useId();
   const describedBy = fieldError ? errorId : undefined;
@@ -31,7 +36,7 @@ export function WalletRepCheckerForm({
           className="font-display text-lg uppercase leading-none text-muted-foreground"
           htmlFor={inputId}
         >
-          Ethereum address
+          {copy.addressLabel}
         </label>
         <input
           aria-describedby={describedBy}
@@ -58,7 +63,7 @@ export function WalletRepCheckerForm({
           disabled={isChecking}
           type="submit"
         >
-          {isChecking ? "Checking..." : "Check REP"}
+          {isChecking ? copy.checkingButton : copy.checkButton}
         </button>
       </div>
     </form>

@@ -1,5 +1,5 @@
 import { type Address, getAddress, isAddress } from "viem";
-import { withRepCheckerMigrationGuideHint } from "./rep-checker.copy";
+import { getCopy } from "@/i18n";
 import type {
   RepBalanceCheckResponse,
   RepBalanceCheckResult,
@@ -20,15 +20,14 @@ type AddressNormalizationResult =
 
 export function normalizeAddressInput(
   inputAddress: string,
+  invalidMessage: string = getCopy("en").repChecker.messages.invalidAddress,
 ): AddressNormalizationResult {
   const address = inputAddress.trim();
 
   if (!isAddress(address)) {
     return {
       address,
-      message: withRepCheckerMigrationGuideHint(
-        "Enter a valid Ethereum address.",
-      ),
+      message: invalidMessage,
       ok: false,
     };
   }

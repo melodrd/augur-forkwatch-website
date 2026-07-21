@@ -5,6 +5,11 @@ import {
   OFFICIAL_MIGRATION_PAGE_URL,
 } from "@/domain/migration/migration.constants";
 import { useMigrationProgress } from "@/features/migration/useMigrationProgress";
+import { getCopy, getIntlLocale } from "@/i18n";
+import type { SiteCopy } from "@/i18n/copy/types";
+import type { Locale } from "@/i18n/locales";
+
+type MigrationCardCopy = SiteCopy["migrationCard"];
 
 type CountdownParts = {
   days: number;
@@ -47,8 +52,8 @@ function getTimelineTimestamps(
   return { endUnix, progressPercent, startUnix };
 }
 
-function formatLocalDeadline(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
+function formatLocalDeadline(date: Date, intlLocale: string) {
+  return new Intl.DateTimeFormat(intlLocale, {
     day: "numeric",
     hour: "2-digit",
     hourCycle: "h23",
@@ -59,8 +64,8 @@ function formatLocalDeadline(date: Date) {
   }).format(date);
 }
 
-function formatUtcDeadline(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
+function formatUtcDeadline(date: Date, intlLocale: string) {
+  return new Intl.DateTimeFormat(intlLocale, {
     day: "numeric",
     hour: "2-digit",
     hourCycle: "h23",
@@ -72,8 +77,8 @@ function formatUtcDeadline(date: Date) {
   }).format(date);
 }
 
-function formatTimelineDate(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
+function formatTimelineDate(date: Date, intlLocale: string) {
+  return new Intl.DateTimeFormat(intlLocale, {
     day: "numeric",
     month: "short",
     timeZone: "UTC",
@@ -81,8 +86,8 @@ function formatTimelineDate(date: Date) {
   }).format(date);
 }
 
-function formatTimelineTime(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
+function formatTimelineTime(date: Date, intlLocale: string) {
+  return new Intl.DateTimeFormat(intlLocale, {
     hour: "2-digit",
     hourCycle: "h23",
     minute: "2-digit",
@@ -91,8 +96,11 @@ function formatTimelineTime(date: Date) {
   }).format(date);
 }
 
-function formatTimelineDateTime(date: Date) {
-  return `${formatTimelineDate(date)}, ${formatTimelineTime(date)}`;
+function formatTimelineDateTime(date: Date, intlLocale: string) {
+  return `${formatTimelineDate(date, intlLocale)}, ${formatTimelineTime(
+    date,
+    intlLocale,
+  )}`;
 }
 
 function CountdownCell({ label, value }: { label: string; value: number }) {
@@ -112,9 +120,13 @@ function CountdownCell({ label, value }: { label: string; value: number }) {
 }
 
 function MigrationTimelineFigure({
+  copy,
+  intlLocale,
   nowMs,
   targetMs,
 }: {
+  copy: MigrationCardCopy;
+  intlLocale: string;
   nowMs: number;
   targetMs: number;
 }) {
@@ -131,13 +143,17 @@ function MigrationTimelineFigure({
 
   return (
     <figure
-      aria-label={`Timeline from ${formatTimelineDateTime(startDate)} to ${formatTimelineDateTime(endDate)}. Current time is ${formatTimelineDateTime(nowDate)}.`}
+      aria-label={copy.timelineAriaLabel({
+        start: formatTimelineDateTime(startDate, intlLocale),
+        end: formatTimelineDateTime(endDate, intlLocale),
+        now: formatTimelineDateTime(nowDate, intlLocale),
+      })}
       className="mt-4 overflow-hidden border border-primary/10 bg-background/70 p-3"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-display text-lg uppercase leading-none text-muted-foreground">
-            60-day timeline
+            {copy.timelineTitle}
           </p>
         </div>
       </div>
@@ -152,7 +168,7 @@ function MigrationTimelineFigure({
             className="absolute top-0 -translate-x-1/2 font-display text-sm uppercase leading-none text-loud-foreground transition-[left] duration-700 ease-out"
             style={{ left: markerLabelPosition }}
           >
-            Now
+            {copy.now}
           </div>
           <div className="absolute left-0 right-0 top-8 h-px -translate-y-1/2 bg-primary/20" />
           <div
@@ -170,24 +186,24 @@ function MigrationTimelineFigure({
         <div className="mt-2 grid grid-cols-2 gap-3">
           <div>
             <p className="font-display text-lg uppercase leading-none text-primary">
-              Start
+              {copy.start}
             </p>
             <p className="mt-1 font-mono text-xs text-muted-foreground">
-              {formatTimelineDate(startDate)}
+              {formatTimelineDate(startDate, intlLocale)}
             </p>
             <p className="mt-0.5 font-mono text-xs text-muted-foreground">
-              {formatTimelineTime(startDate)}
+              {formatTimelineTime(startDate, intlLocale)}
             </p>
           </div>
           <div className="text-right">
             <p className="font-display text-lg uppercase leading-none text-red">
-              Deadline
+              {copy.deadline}
             </p>
             <p className="mt-1 font-mono text-xs text-muted-foreground">
-              {formatTimelineDate(endDate)}
+              {formatTimelineDate(endDate, intlLocale)}
             </p>
             <p className="mt-0.5 font-mono text-xs text-muted-foreground">
-              {formatTimelineTime(endDate)}
+              {formatTimelineTime(endDate, intlLocale)}
             </p>
           </div>
         </div>
@@ -210,9 +226,11 @@ function DeadlineTimeValue({ label, value }: { label: string; value: string }) {
 }
 
 function DeadlinePanel({
+  copy,
   localValue,
   utcValue,
 }: {
+  copy: MigrationCardCopy;
   localValue: string;
   utcValue: string;
 }) {
@@ -220,18 +238,26 @@ function DeadlinePanel({
     <div className="mt-4 flex flex-1 flex-col overflow-hidden border border-primary/10 bg-background/70">
       <div className="border-primary/10 border-b px-3 py-2">
         <p className="font-display text-lg uppercase leading-none text-muted-foreground">
-          Cutoff time
+          {copy.cutoffTime}
         </p>
       </div>
       <dl className="grid flex-1 divide-y divide-primary/10 sm:grid-cols-4 sm:divide-x sm:divide-y-0">
-        <DeadlineTimeValue label="UTC" value={utcValue} />
-        <DeadlineTimeValue label="Local" value={localValue} />
+        <DeadlineTimeValue label={copy.utcLabel} value={utcValue} />
+        <DeadlineTimeValue label={copy.localLabel} value={localValue} />
       </dl>
     </div>
   );
 }
 
-export function MigrationReadinessCard() {
+type MigrationReadinessCardProps = {
+  locale: Locale;
+};
+
+export function MigrationReadinessCard({
+  locale,
+}: MigrationReadinessCardProps) {
+  const copy = getCopy(locale).migrationCard;
+  const intlLocale = getIntlLocale(locale);
   const state = useMigrationProgress();
   const [nowMs, setNowMs] = useState(() => Date.now());
   const forkEndTime =
@@ -246,9 +272,9 @@ export function MigrationReadinessCard() {
       : getCountdownParts(nowMs, targetMs);
   const deadlineStatus =
     state.status === "loading"
-      ? "Loading deadline from Ethereum mainnet"
+      ? copy.loadingDeadline
       : targetDate === null
-        ? "Deadline temporarily unavailable"
+        ? copy.deadlineUnavailableShort
         : null;
 
   useEffect(() => {
@@ -264,19 +290,19 @@ export function MigrationReadinessCard() {
   }, []);
 
   return (
-    <aside aria-label="Migration countdown" className="visual-card p-4 sm:p-5">
+    <aside aria-label={copy.ariaLabel} className="visual-card p-4 sm:p-5">
       <p className="font-display text-xl uppercase leading-none text-muted-foreground">
-        &gt;_ Migration deadline
+        &gt;_ {copy.eyebrow}
       </p>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.52fr)] lg:items-stretch">
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between gap-3">
             <p className="font-display text-lg uppercase leading-none text-muted-foreground">
-              Time remaining
+              {copy.timeRemaining}
             </p>
             <p className="font-mono text-xs uppercase tracking-[0.16em] text-foreground/60">
-              Live countdown
+              {copy.liveCountdown}
             </p>
           </div>
 
@@ -285,17 +311,21 @@ export function MigrationReadinessCard() {
               aria-hidden="true"
               className="grid grid-cols-2 gap-2 sm:grid-cols-4"
             >
-              <CountdownCell label="Days" value={countdown.days} />
-              <CountdownCell label="Hours" value={countdown.hours} />
-              <CountdownCell label="Min" value={countdown.minutes} />
-              <CountdownCell label="Sec" value={countdown.seconds} />
+              <CountdownCell label={copy.units.days} value={countdown.days} />
+              <CountdownCell label={copy.units.hours} value={countdown.hours} />
+              <CountdownCell
+                label={copy.units.minutes}
+                value={countdown.minutes}
+              />
+              <CountdownCell
+                label={copy.units.seconds}
+                value={countdown.seconds}
+              />
             </div>
 
             {targetDate ? (
               <p className="sr-only" suppressHydrationWarning>
-                Time left to migrate REP: {countdown.days} days,{" "}
-                {countdown.hours} hours, {countdown.minutes} minutes, and{" "}
-                {countdown.seconds} seconds.
+                {copy.countdownSrText(countdown)}
               </p>
             ) : (
               <p className="sr-only">{deadlineStatus}</p>
@@ -305,26 +335,32 @@ export function MigrationReadinessCard() {
           {targetMs === null ? (
             <div className="mt-4 border border-primary/10 bg-background/70 p-3">
               <p className="font-display text-lg uppercase leading-none text-muted-foreground">
-                60-day timeline
+                {copy.timelineTitle}
               </p>
               <p className="mt-2 font-mono text-xs text-muted-foreground">
                 {deadlineStatus}
               </p>
             </div>
           ) : (
-            <MigrationTimelineFigure nowMs={nowMs} targetMs={targetMs} />
+            <MigrationTimelineFigure
+              copy={copy}
+              intlLocale={intlLocale}
+              nowMs={nowMs}
+              targetMs={targetMs}
+            />
           )}
 
           <DeadlinePanel
+            copy={copy}
             localValue={
               targetDate === null
-                ? (deadlineStatus ?? "Deadline unavailable")
-                : formatLocalDeadline(targetDate)
+                ? (deadlineStatus ?? copy.deadlineUnavailable)
+                : formatLocalDeadline(targetDate, intlLocale)
             }
             utcValue={
               targetDate === null
-                ? (deadlineStatus ?? "Deadline unavailable")
-                : formatUtcDeadline(targetDate)
+                ? (deadlineStatus ?? copy.deadlineUnavailable)
+                : formatUtcDeadline(targetDate, intlLocale)
             }
           />
         </div>
@@ -339,24 +375,18 @@ export function MigrationReadinessCard() {
                 !
               </span>
               <p className="font-display text-2xl uppercase leading-none">
-                Warning
+                {copy.warningLabel}
               </p>
             </div>
-            <p className="text-sm leading-6">
-              If you fail to migrate your REP before the deadline, your REP will
-              be deemed worthless.
-            </p>
+            <p className="text-sm leading-6">{copy.warningBody}</p>
           </div>
 
           <div className="border border-primary/10 bg-background/70 p-3">
             <p className="font-display text-lg uppercase leading-none text-muted-foreground">
-              Next action
+              {copy.nextActionLabel}
             </p>
             <p className="mt-2 text-sm leading-6 text-foreground/80">
-              Check whether your wallet holds REPv1 or REPv2 first, then read
-              the migration instructions and migrate before the timer reaches
-              zero. After migration, confirm that your address holds the
-              intended destination REP token.
+              {copy.nextActionBody}
             </p>
           </div>
 
@@ -365,19 +395,21 @@ export function MigrationReadinessCard() {
               className="btn-terminal-secondary min-h-10 px-4 py-2"
               href="#check"
             >
-              CHECK REP
+              {copy.checkRepButton}
             </a>
             <ExternalLinkWithWarning
               className="btn-terminal-secondary min-h-10 px-4 py-2"
               href={OFFICIAL_MIGRATION_GUIDE_URL}
+              locale={locale}
             >
-              Migration instructions
+              {copy.migrationInstructions}
             </ExternalLinkWithWarning>
             <ExternalLinkWithWarning
               className="btn-terminal-primary min-h-10 px-4 py-2"
               href={OFFICIAL_MIGRATION_PAGE_URL}
+              locale={locale}
             >
-              Migration website
+              {copy.migrationWebsite}
             </ExternalLinkWithWarning>
           </div>
         </div>

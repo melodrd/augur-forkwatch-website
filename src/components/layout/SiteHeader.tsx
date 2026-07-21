@@ -1,8 +1,9 @@
+import { LanguageToggle } from "@/components/brand/LanguageToggle";
 import { Wordmark } from "@/components/brand/Wordmark";
-import {
-  PageSectionNav,
-  type SectionNavItem,
-} from "@/components/layout/PageSectionNav";
+import { PageSectionNav } from "@/components/layout/PageSectionNav";
+import { forkSections } from "@/content/fork/fork-sections";
+import { getCopy } from "@/i18n";
+import type { Locale } from "@/i18n/locales";
 
 const mainSiteUrl = import.meta.env.PUBLIC_MAIN_SITE_URL || "https://augur.net";
 
@@ -13,11 +14,17 @@ const socialLinks = [
 ] as const;
 
 type SiteHeaderProps = {
-  sectionNavLabel?: string;
-  sections?: readonly SectionNavItem[];
+  locale: Locale;
 };
 
-export function SiteHeader({ sectionNavLabel, sections }: SiteHeaderProps) {
+export function SiteHeader({ locale }: SiteHeaderProps) {
+  const copy = getCopy(locale);
+  const sections = forkSections.map((section) => ({
+    href: section.href,
+    id: section.id,
+    label: copy.nav.sectionLabels[section.id],
+  }));
+
   return (
     <header className="sticky top-0 z-20 border-b border-primary/10 bg-background/90 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -37,10 +44,11 @@ export function SiteHeader({ sectionNavLabel, sections }: SiteHeaderProps) {
             <Wordmark
               accentClassName="text-[#2AE7A8]"
               className="shrink-0 text-4xl text-[#2AE7A8] hover:text-[#2AE7A8] focus-visible:text-[#2AE7A8]"
+              locale={locale}
             />
           </div>
 
-          <div className="flex justify-center md:justify-end">
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 md:justify-end">
             <div className="flex gap-x-5">
               {socialLinks.map((link) => (
                 <a
@@ -54,12 +62,13 @@ export function SiteHeader({ sectionNavLabel, sections }: SiteHeaderProps) {
                 </a>
               ))}
             </div>
+            <div className="border-l border-primary/15 pl-5">
+              <LanguageToggle locale={locale} />
+            </div>
           </div>
         </div>
 
-        {sections?.length ? (
-          <PageSectionNav ariaLabel={sectionNavLabel} sections={sections} />
-        ) : null}
+        <PageSectionNav locale={locale} sections={sections} />
       </div>
     </header>
   );

@@ -1,5 +1,7 @@
 ---
 import "@/styles/global.css";
+import { getCopy, OG_LOCALES } from "@/i18n";
+import type { Locale } from "@/i18n/locales";
 import { withBase } from "@/lib/utils";
 
 type Props = {
@@ -7,32 +9,36 @@ type Props = {
   canonicalURL?: string;
   description?: string;
   keywords?: string[];
+  locale?: Locale;
   noindex?: boolean;
   ogImage?: string;
   ogType?: string;
   title?: string;
 };
 
-const siteUrl = Astro.site || new URL(Astro.url.origin);
-const defaultCanonicalURL = new URL(Astro.url.pathname, siteUrl).href;
 const {
   author = "Augur Project",
-  canonicalURL = defaultCanonicalURL,
-  description = "ForkWatch is a public REP holder safety and fork-status dashboard for the Augur reboot.",
-  keywords = [
-    "Augur",
-    "ForkWatch",
-    "REP",
-    "REP token",
-    "fork dashboard",
-    "prediction markets",
-    "Ethereum",
-  ],
+  canonicalURL,
+  description,
+  keywords,
+  locale = "en",
   noindex = false,
   ogImage = "/favicon.svg",
   ogType = "website",
-  title = "ForkWatch - Augur Fork Status",
+  title,
 } = Astro.props;
+
+const copy = getCopy(locale);
+const resolvedTitle = title ?? copy.meta.title;
+const resolvedDescription = description ?? copy.meta.description;
+const resolvedKeywords = keywords ?? [...copy.meta.keywords];
+
+const siteUrl = Astro.site || new URL(Astro.url.origin);
+const englishUrl = new URL(withBase("/"), siteUrl).href;
+const koreanUrl = new URL(withBase("/ko/"), siteUrl).href;
+const localeCanonicalURL = locale === "ko" ? koreanUrl : englishUrl;
+const resolvedCanonicalURL = canonicalURL ?? localeCanonicalURL;
+
 const absoluteOgImage = new URL(withBase(ogImage), siteUrl).href;
 const publisherUrl = new URL(withBase("/"), siteUrl).href;
 
@@ -41,8 +47,9 @@ const structuredData = JSON.stringify({
   "@type": "WebApplication",
   name: "ForkWatch",
   applicationCategory: "FinanceApplication",
-  description,
-  url: canonicalURL,
+  description: resolvedDescription,
+  inLanguage: locale,
+  url: resolvedCanonicalURL,
   publisher: {
     "@type": "Organization",
     name: "Augur",
@@ -52,31 +59,34 @@ const structuredData = JSON.stringify({
 ---
 
 <!doctype html>
-<html class="bg-background text-foreground" lang="en">
+<html class="bg-background text-foreground" lang={locale}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
-    <meta name="description" content={description} />
+    <title>{resolvedTitle}</title>
+    <meta name="description" content={resolvedDescription} />
     <meta name="author" content={author} />
-    <meta name="keywords" content={keywords.join(", ")} />
-    <link rel="canonical" href={canonicalURL} />
+    <meta name="keywords" content={resolvedKeywords.join(", ")} />
+    <link rel="canonical" href={resolvedCanonicalURL} />
+    <link rel="alternate" hreflang="en" href={englishUrl} />
+    <link rel="alternate" hreflang="ko" href={koreanUrl} />
+    <link rel="alternate" hreflang="x-default" href={englishUrl} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
 
     <meta property="og:type" content={ogType} />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
+    <meta property="og:title" content={resolvedTitle} />
+    <meta property="og:description" content={resolvedDescription} />
     <meta property="og:image" content={absoluteOgImage} />
-    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:url" content={resolvedCanonicalURL} />
     <meta property="og:site_name" content="ForkWatch" />
-    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale" content={OG_LOCALES[locale]} />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@AugurProject" />
     <meta name="twitter:creator" content="@AugurProject" />
-    <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
+    <meta name="twitter:title" content={resolvedTitle} />
+    <meta name="twitter:description" content={resolvedDescription} />
     <meta name="twitter:image" content={absoluteOgImage} />
 
     <meta name="theme-color" content="#16A34A" />

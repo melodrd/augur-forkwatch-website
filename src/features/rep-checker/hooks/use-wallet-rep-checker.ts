@@ -1,21 +1,26 @@
 import { type SyntheticEvent, useEffect, useRef, useState } from "react";
+import { getCopy } from "@/i18n";
+import type { Locale } from "@/i18n/locales";
 import { checkWalletRep } from "../rep-checker.client";
-import { REP_CHECKER_RPC_ERROR_MESSAGE } from "../rep-checker.copy";
 import { normalizeAddressInput } from "../rep-checker.helpers";
 import type { RepBalanceCheckResponse } from "../rep-checker.types";
 
 export type WalletRepCheckerStatus = "idle" | "checking" | "success" | "error";
 
-function createFallbackError(address: string): RepBalanceCheckResponse {
+function createFallbackError(
+  address: string,
+  rpcErrorMessage: string,
+): RepBalanceCheckResponse {
   return {
     address,
     checkedAt: new Date().toISOString(),
-    message: REP_CHECKER_RPC_ERROR_MESSAGE,
+    message: rpcErrorMessage,
     status: "error",
   };
 }
 
-export function useWalletRepChecker() {
+export function useWalletRepChecker(locale: Locale = "en") {
+  const messages = getCopy(locale).repChecker.messages;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const requestIdRef = useRef(0);
   const resultContainerRef = useRef<HTMLDivElement | null>(null);
@@ -66,7 +71,10 @@ export function useWalletRepChecker() {
     event?.preventDefault();
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
-    const normalizedInput = normalizeAddressInput(addressInput);
+    const normalizedInput = normalizeAddressInput(
+      addressInput,
+      messages.invalidAddress,
+    );
 
     if (!normalizedInput.ok) {
       setFieldError(normalizedInput.message);
@@ -83,7 +91,9 @@ export function useWalletRepChecker() {
     setError(null);
 
     try {
-      const response = await checkWalletRep(normalizedInput.address);
+      const response = await checkWalletRep(normalizedInput.address, {
+        messages,
+      });
       if (requestIdRef.current !== requestId) {
         return;
       }
@@ -98,9 +108,11 @@ export function useWalletRepChecker() {
       const message =
         requestError instanceof Error
           ? requestError.message
-          : REP_CHECKER_RPC_ERROR_MESSAGE;
+          : messages.rpcError;
       setError(message);
-      setResult(createFallbackError(normalizedInput.address));
+      setResult(
+        createFallbackError(normalizedInput.address, messages.rpcError),
+      );
       setStatus("error");
     }
   }
