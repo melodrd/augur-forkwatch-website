@@ -5,7 +5,7 @@
 export const exchangeGroups = [
   {
     id: "will-support",
-    exchanges: ["Kraken"],
+    exchanges: ["Kraken", "OKX", "Bitpanda"],
     toneClassName: "border-primary/35 bg-primary/5 text-primary",
   },
   {
@@ -15,7 +15,7 @@ export const exchangeGroups = [
   },
   {
     id: "not-confirmed",
-    exchanges: ["OKX", "Bitpanda"],
+    exchanges: [],
     toneClassName: "border-amber/35 bg-amber/5 text-amber",
   },
 ] as const;
