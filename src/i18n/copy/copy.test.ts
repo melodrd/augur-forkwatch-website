@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { forkFaqCards } from "@/content/fork/fork-faq";
 import { en } from "./en";
 import { ko } from "./ko";
 
@@ -12,23 +13,29 @@ const IDENTICAL_WHITELIST = new Set([
   "REP",
 ]);
 
-// A single argument object that satisfies every template-function signature in
-// the dictionary (countdown parts, timeline range, checked-through args, and the
-// single-string/number helpers via [object Object] / NaN fallbacks).
+// A single argument object that satisfies the object-shaped template-function
+// signatures in the dictionary. Scalar helpers use the fallback candidates in
+// `resolveLeaf` below.
 const SAMPLE_ARG = {
-  days: 1,
-  hours: 2,
-  minutes: 3,
-  seconds: 4,
   start: "START",
   end: "END",
-  now: "NOW",
   date: "DATE",
   endpoint: "ENDPOINT",
 };
 
 function resolveLeaf(value: unknown): string {
   if (typeof value === "function") {
+    if (value.length >= 2) {
+      const result = (value as (first: string, second: string) => unknown)(
+        "26.78%",
+        "REPv2_Yes_1",
+      );
+
+      if (typeof result === "string") {
+        return result;
+      }
+    }
+
     for (const candidate of [SAMPLE_ARG, "sample", 1]) {
       try {
         const result = (value as (arg: unknown) => unknown)(candidate);
@@ -101,5 +108,59 @@ describe("Korean copy dictionary", () => {
     }
 
     expect(untranslated).toEqual([]);
+  });
+
+  it("keeps natural previous and final headline states in both locales", () => {
+    expect(
+      `${en.overview.titlePrefix} ${en.overview.titlePreviousStatus}`,
+    ).toBe("The Augur fork is happening");
+    expect(`${en.overview.titlePrefix} ${en.overview.titleStatus}`).toBe(
+      "The Augur fork happened",
+    );
+    expect(
+      `${ko.overview.titlePrefix} ${ko.overview.titlePreviousStatus}`,
+    ).toBe("오거 포크가 진행 중입니다");
+    expect(`${ko.overview.titlePrefix} ${ko.overview.titleStatus}`).toBe(
+      "오거 포크가 종료되었습니다",
+    );
+  });
+
+  it("explains remaining REP gently without internal result jargon", () => {
+    expect(en.overview.faq["how-urgent"].question).toBe(
+      "I still hold REPv2. What now?",
+    );
+    expect(ko.overview.faq["how-urgent"].question).toBe(
+      "아직 REPv2가 있다면 어떻게 하나요?",
+    );
+
+    const visibleCopy = [...enLeaves.values(), ...koLeaves.values()].join("\n");
+    expect(visibleCopy).not.toMatch(
+      /post-cutoff|winning universe|configured destination|snapshot confirmed|read pending|승리 유니버스|설정된 목적지|스냅샷 확인/i,
+    );
+
+    expect(forkFaqCards.find(({ id }) => id === "how-urgent")?.ctaHref).toBe(
+      "#check",
+    );
+  });
+
+  it("describes the two migrated supplies without implying an outcome", () => {
+    expect(en.progressBar.ended.yesOutcomeLabel).toBe("Yes child universe");
+    expect(en.progressBar.ended.noOutcomeLabel).toBe("No child universe");
+    expect(ko.progressBar.ended.yesOutcomeLabel).toBe("Yes 자식 유니버스");
+    expect(ko.progressBar.ended.noOutcomeLabel).toBe("No 자식 유니버스");
+    expect(en.repChecker.migratedRepYesLabel).toBe("Migrated REP (Yes)");
+    expect(en.repChecker.migratedRepNoLabel).toBe("Migrated REP (No)");
+    expect(ko.repChecker.migratedRepYesLabel).toBe("마이그레이션된 REP (Yes)");
+    expect(ko.repChecker.migratedRepNoLabel).toBe("마이그레이션된 REP (No)");
+
+    const outcomeCopy = [
+      en.progressBar.ended.outcomeSectionTitle,
+      ko.progressBar.ended.outcomeSectionTitle,
+      en.progressBar.ended.tokenSupplyLabel,
+      ko.progressBar.ended.tokenSupplyLabel,
+    ].join("\n");
+    expect(outcomeCopy).not.toMatch(
+      /winner|winning|confirmed|pending|승리|확정|대기/i,
+    );
   });
 });

@@ -17,10 +17,20 @@ if (progress.status === "loaded" && !progress.rpcInfo.sourceRpcLabel?.trim()) {
   throw new Error("Loaded migration progress JSON is missing an RPC source.");
 }
 
+if (
+  progress.status === "loaded" &&
+  (progress.outcomes.yes.supplyRaw === null ||
+    progress.outcomes.no.supplyRaw === null)
+) {
+  throw new Error(
+    "Loaded migration progress JSON is missing outcome supply data.",
+  );
+}
+
 if (JSON.stringify(payload).includes("Source: Ethereum mainnet")) {
   throw new Error("Migration progress JSON contains a vague source label.");
 }
 
 console.log(
-  `Migration progress JSON valid: ${progress.status}, checked ${progress.checkedAt}.`,
+  `Migration progress JSON valid: schema v${progress.schemaVersion}, ${progress.status}, checked ${progress.checkedAt}.`,
 );

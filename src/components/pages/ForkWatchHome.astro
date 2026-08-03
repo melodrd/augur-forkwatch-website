@@ -10,6 +10,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { getCopy } from "@/i18n";
 import type { Locale } from "@/i18n/locales";
 import ForkWatchLayout from "@/layouts/ForkWatchLayout.astro";
+import migrationProgress from "../../../public/data/migration-progress.json";
 
 type Props = {
   locale: Locale;
@@ -20,6 +21,7 @@ const copy = getCopy(locale);
 ---
 
 <ForkWatchLayout
+  dateModified={migrationProgress.checkedAt}
   description={copy.meta.description}
   locale={locale}
   title={copy.meta.title}

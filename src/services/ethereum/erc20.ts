@@ -11,12 +11,14 @@ export async function readErc20Decimals(
   client: PublicClient,
   tokenAddress: Address,
   fallback = 18,
+  blockNumber?: bigint,
 ): Promise<number> {
   try {
     const decimals = Number(
       await client.readContract({
         abi: ERC20_ABI,
         address: tokenAddress,
+        blockNumber,
         functionName: "decimals",
       }),
     );
@@ -34,12 +36,14 @@ export async function readErc20Decimals(
 export async function readErc20Symbol(
   client: PublicClient,
   tokenAddress: Address,
+  blockNumber?: bigint,
 ): Promise<string | null> {
   try {
     const symbol = String(
       await client.readContract({
         abi: ERC20_ABI,
         address: tokenAddress,
+        blockNumber,
         functionName: "symbol",
       }),
     ).trim();
@@ -53,10 +57,12 @@ export async function readErc20Symbol(
 export async function readErc20TotalSupply(
   client: PublicClient,
   tokenAddress: Address,
+  blockNumber?: bigint,
 ): Promise<bigint> {
   return client.readContract({
     abi: ERC20_ABI,
     address: tokenAddress,
+    blockNumber,
     functionName: "totalSupply",
   });
 }

@@ -10,25 +10,14 @@ import {
   getSafeRpcFailureLabel,
   sanitizeRpcErrorMessage,
 } from "../src/domain/ethereum/rpc-endpoints";
-import {
-  AUGUR_FORK_MARKET_ADDRESSES,
-  AUGUR_MIGRATION_OUTCOME_INDEX,
-} from "../src/features/migration/migration-progress.constants";
+import { AUGUR_FORK_END_TIME_FALLBACK_UNIX_SECONDS } from "../src/features/migration/migration-progress.constants";
 import {
   buildErrorMigrationProgressJson,
   buildLoadedMigrationProgressJson,
   parseMigrationProgressPayload,
 } from "../src/features/migration/migration-progress.helpers";
-import type {
-  MigrationProgressErrorCode,
-  MigrationProgressJson,
-} from "../src/features/migration/migration-progress.types";
-import { readAugurMigrationMarketStateFromMarkets } from "../src/services/ethereum/augur-universe";
-import {
-  readErc20Decimals,
-  readErc20Symbol,
-  readErc20TotalSupply,
-} from "../src/services/ethereum/erc20";
+import type { MigrationProgressJson } from "../src/features/migration/migration-progress.types";
+import { readMigrationTokenSnapshot } from "../src/features/migration/migration-token-snapshot";
 
 const OUTPUT_PATH = fileURLToPath(
   new URL("../public/data/migration-progress.json", import.meta.url),
@@ -62,45 +51,10 @@ async function readExistingProgress(): Promise<MigrationProgressJson | null> {
   }
 }
 
-function buildSafeErrorJson({
-  checkedAt,
-  code,
-  message,
-  previousProgress,
-}: {
-  checkedAt: string;
-  code: MigrationProgressErrorCode;
-  message: string;
-  previousProgress: MigrationProgressJson | null;
-}): MigrationProgressJson {
-  const lastSuccessAt =
-    previousProgress?.lastSuccessAt ??
-    (previousProgress?.status === "loaded" ? previousProgress.checkedAt : null);
-
-  if (previousProgress?.status === "loaded") {
-    return {
-      ...previousProgress,
-      checkedAt,
-      error: {
-        code,
-        message,
-      },
-      lastSuccessAt,
-      status: "error",
-    };
-  }
-
-  return buildErrorMigrationProgressJson({
-    checkedAt,
-    code,
-    lastSuccessAt,
-    message,
-  });
-}
-
 async function generateMigrationProgress(): Promise<MigrationProgressJson> {
   const checkedAt = new Date().toISOString();
   const errors: string[] = [];
+  const previousProgress = await readExistingProgress();
   let sawMainnetRpc = false;
 
   for (const [index, endpoint] of RPC_ENDPOINTS.entries()) {
@@ -119,33 +73,19 @@ async function generateMigrationProgress(): Promise<MigrationProgressJson> {
       sawMainnetRpc = true;
 
       const blockNumber = await client.getBlockNumber();
-      const { forkEndTime, migrationTokenAddress } =
-        await readAugurMigrationMarketStateFromMarkets(
-          client,
-          AUGUR_FORK_MARKET_ADDRESSES,
-          AUGUR_MIGRATION_OUTCOME_INDEX,
-        );
 
-      const [migratedRaw, decimals, symbol] = await Promise.all([
-        readErc20TotalSupply(client, migrationTokenAddress),
-        readErc20Decimals(client, migrationTokenAddress),
-        readErc20Symbol(client, migrationTokenAddress),
-      ]);
+      const outcomes = await readMigrationTokenSnapshot(client, blockNumber);
 
       return buildLoadedMigrationProgressJson({
         blockNumber: blockNumber.toString(),
         checkedAt,
-        decimals,
         endpointLabel: endpoint.label,
         fallbacksAttempted: index,
-        forkEndTime,
+        forkEndTime: BigInt(AUGUR_FORK_END_TIME_FALLBACK_UNIX_SECONDS),
         latencyMs: Date.now() - startedAt,
-        migratedRaw,
+        outcomes,
         rpcSource: getEthereumRpcSourceInfo(endpoint),
         sourceChainId: ETHEREUM_MAINNET_CHAIN_ID,
-        symbol,
-        tokenAddress: migrationTokenAddress,
-        tokenLabel: "REP migrated",
       });
     } catch (error) {
       errors.push(
@@ -157,14 +97,14 @@ async function generateMigrationProgress(): Promise<MigrationProgressJson> {
     }
   }
 
-  return buildSafeErrorJson({
+  return buildErrorMigrationProgressJson({
     checkedAt,
     code: sawMainnetRpc ? "CONTRACT_READ_FAILED" : "RPC_UNAVAILABLE",
     message:
       errors.length > 0
         ? errors.join(" | ")
         : "No Ethereum RPC endpoints were configured.",
-    previousProgress: await readExistingProgress(),
+    previousProgress,
   });
 }
 
@@ -175,7 +115,7 @@ await writeFile(OUTPUT_PATH, `${JSON.stringify(progress, null, 2)}\n`);
 
 if (progress.status === "loaded") {
   console.log(
-    `Migration progress generated: ${progress.migratedRep} REP migrated, ${progress.migratedPercent?.toFixed(
+    `Migration progress generated: ${progress.migratedRep} REP total (${progress.outcomes.yes.supplyRep} Yes + ${progress.outcomes.no.supplyRep} No), ${progress.migratedPercent?.toFixed(
       4,
     )}% migrated. Source: ${progress.rpcInfo.sourceRpcLabel}. Block: ${
       progress.blockNumber

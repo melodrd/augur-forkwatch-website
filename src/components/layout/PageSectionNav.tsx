@@ -183,7 +183,7 @@ export function PageSectionNav({
           return (
             <a
               aria-current={isActive ? "location" : undefined}
-              className={`shrink-0 border px-3 py-2 font-display text-base uppercase leading-none outline-none transition sm:text-lg ${
+              className={`shrink-0 border px-2 py-2 font-display text-sm uppercase leading-none outline-none transition sm:px-3 sm:text-lg ${
                 isActive
                   ? "border-primary bg-primary text-background"
                   : "menu-link border-transparent text-foreground hover:border-foreground/30 hover:bg-foreground/5 hover:text-loud-foreground focus-visible:border-foreground/30 focus-visible:bg-foreground/5 focus-visible:text-loud-foreground"

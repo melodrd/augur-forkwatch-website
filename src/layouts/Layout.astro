@@ -1,5 +1,6 @@
 ---
 import "@/styles/global.css";
+import { AUGUR_FORK_END_TIME_FALLBACK_UNIX_SECONDS } from "@/features/migration/migration-progress.constants";
 import { getCopy, OG_LOCALES } from "@/i18n";
 import type { Locale } from "@/i18n/locales";
 import { withBase } from "@/lib/utils";
@@ -7,11 +8,13 @@ import { withBase } from "@/lib/utils";
 type Props = {
   author?: string;
   canonicalURL?: string;
+  dateModified?: string;
   description?: string;
   keywords?: string[];
   locale?: Locale;
   noindex?: boolean;
   ogImage?: string;
+  ogImageAlt?: string;
   ogType?: string;
   title?: string;
 };
@@ -19,11 +22,13 @@ type Props = {
 const {
   author = "Augur Project",
   canonicalURL,
+  dateModified,
   description,
   keywords,
   locale = "en",
   noindex = false,
   ogImage = "/favicon.svg",
+  ogImageAlt = "ForkWatch",
   ogType = "website",
   title,
 } = Astro.props;
@@ -41,20 +46,41 @@ const resolvedCanonicalURL = canonicalURL ?? localeCanonicalURL;
 
 const absoluteOgImage = new URL(withBase(ogImage), siteUrl).href;
 const publisherUrl = new URL(withBase("/"), siteUrl).href;
+const forkEndDate = new Date(
+  AUGUR_FORK_END_TIME_FALLBACK_UNIX_SECONDS * 1000,
+).toISOString();
 
 const structuredData = JSON.stringify({
   "@context": "https://schema.org",
-  "@type": "WebApplication",
-  name: "ForkWatch",
-  applicationCategory: "FinanceApplication",
-  description: resolvedDescription,
-  inLanguage: locale,
-  url: resolvedCanonicalURL,
-  publisher: {
-    "@type": "Organization",
-    name: "Augur",
-    url: publisherUrl,
-  },
+  "@graph": [
+    {
+      "@type": "WebPage",
+      name: resolvedTitle,
+      description: resolvedDescription,
+      inLanguage: locale,
+      url: resolvedCanonicalURL,
+      ...(dateModified ? { dateModified } : {}),
+      about: {
+        "@type": "Event",
+        name: "Augur fork migration window",
+        endDate: forkEndDate,
+        eventStatus: "https://schema.org/EventCompleted",
+      },
+      publisher: {
+        "@type": "Organization",
+        name: "Augur",
+        url: publisherUrl,
+      },
+    },
+    {
+      "@type": "WebApplication",
+      name: "ForkWatch REP checker",
+      applicationCategory: "FinanceApplication",
+      description: resolvedDescription,
+      inLanguage: locale,
+      url: `${resolvedCanonicalURL}#check`,
+    },
+  ],
 });
 ---
 
@@ -78,6 +104,7 @@ const structuredData = JSON.stringify({
     <meta property="og:title" content={resolvedTitle} />
     <meta property="og:description" content={resolvedDescription} />
     <meta property="og:image" content={absoluteOgImage} />
+    <meta property="og:image:alt" content={ogImageAlt} />
     <meta property="og:url" content={resolvedCanonicalURL} />
     <meta property="og:site_name" content="ForkWatch" />
     <meta property="og:locale" content={OG_LOCALES[locale]} />
@@ -88,6 +115,7 @@ const structuredData = JSON.stringify({
     <meta name="twitter:title" content={resolvedTitle} />
     <meta name="twitter:description" content={resolvedDescription} />
     <meta name="twitter:image" content={absoluteOgImage} />
+    <meta name="twitter:image:alt" content={ogImageAlt} />
 
     <meta name="theme-color" content="#16A34A" />
     <meta name="application-name" content="ForkWatch" />

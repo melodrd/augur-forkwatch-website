@@ -20,11 +20,12 @@ const resultFrameClasses: Record<WalletRepResultKind, string> = {
   both: "border-primary/40 bg-background/70",
   error: "border-primary/10 bg-background/70",
   invalid: "border-primary/10 bg-background/70",
+  legacyAndMigrated: "border-amber/40 bg-amber/10",
+  migrated: "border-primary/10 bg-background/70",
   none: "border-primary/10 bg-background/70",
   partial: "border-amber/40 bg-amber/10",
   repv1: "border-primary/40 bg-background/70",
   repv2: "border-primary/40 bg-background/70",
-  repv2Yes1: "border-primary/10 bg-background/70",
 };
 
 type WalletRepResultCardProps = {

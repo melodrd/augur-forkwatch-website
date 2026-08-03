@@ -46,6 +46,17 @@ export const REP_TOKENS = {
     name: "REPv2_Yes_1",
     symbol: "REPv2_Yes_1",
   },
+  repV2No1: {
+    address: "0x2f4005456c2f098358213f01dbe34abdaa2989a4",
+    aliases: ["REPv2_No_1"],
+    chainId: ETHEREUM_MAINNET_CHAIN_ID,
+    chainName: ETHEREUM_MAINNET_CHAIN_NAME,
+    contractSymbol: "REPv2_No_1",
+    decimals: 18,
+    id: "rep-v2-no-1",
+    name: "REPv2_No_1",
+    symbol: "REPv2_No_1",
+  },
 } as const satisfies Record<string, RepTokenDefinition>;
 
 export type RepTokenKey = keyof typeof REP_TOKENS;

@@ -82,6 +82,13 @@ export function getWalletRepResultKind(
   const hasRepV2 = getTokenBalance(result, "REPv2")?.hasBalance ?? false;
   const hasRepV2Yes1 =
     getTokenBalance(result, "REPv2_Yes_1")?.hasBalance ?? false;
+  const hasRepV2No1 =
+    getTokenBalance(result, "REPv2_No_1")?.hasBalance ?? false;
+  const hasMigratedRep = hasRepV2Yes1 || hasRepV2No1;
+
+  if (hasMigratedRep && (hasRepV1 || hasRepV2)) {
+    return "legacyAndMigrated";
+  }
 
   if (hasRepV1 && hasRepV2) {
     return "both";
@@ -95,8 +102,8 @@ export function getWalletRepResultKind(
     return "repv2";
   }
 
-  if (hasRepV2Yes1) {
-    return "repv2Yes1";
+  if (hasMigratedRep) {
+    return "migrated";
   }
 
   return "none";

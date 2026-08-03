@@ -1,18 +1,44 @@
 {
-  "schemaVersion": 1,
-  "blockNumber": "25335083",
+  "schemaVersion": 2,
+  "blockNumber": "25670946",
   "chainId": 1,
-  "checkedAt": "2026-06-17T05:12:21.559Z",
+  "checkedAt": "2026-08-03T01:01:43.591Z",
   "error": null,
   "forkEndTime": 1785718859,
-  "lastSuccessAt": "2026-06-17T05:12:21.559Z",
-  "migratedPercent": 26.78,
-  "migratedRaw": "2946674861494239596308538",
-  "migratedRep": "2946674.861494239596308538",
+  "lastSuccessAt": "2026-08-03T01:01:43.591Z",
+  "migratedPercent": 59.52,
+  "migratedRaw": "6547325227400866527400056",
+  "migratedRep": "6547325.227400866527400056",
+  "outcomes": {
+    "no": {
+      "supplyPercent": 0.02,
+      "supplyRaw": "1786227400866527400056",
+      "supplyRep": "1786.227400866527400056",
+      "token": {
+        "address": "0x2F4005456c2F098358213f01DbE34abDAa2989A4",
+        "decimals": 18,
+        "label": "No outcome REP",
+        "symbol": "REPv2_No_1"
+      },
+      "universeAddress": "0xbaaD633FAa0E4847A4b66043E3E92102e5800546"
+    },
+    "yes": {
+      "supplyPercent": 59.5,
+      "supplyRaw": "6545539000000000000000000",
+      "supplyRep": "6545539",
+      "token": {
+        "address": "0xCf6A0A7826fa124B7705d6f3c675eAD76f1e540D",
+        "decimals": 18,
+        "label": "Yes outcome REP",
+        "symbol": "REPv2_Yes_1"
+      },
+      "universeAddress": "0x281171519Fb41540528398d8ED3EA257f0F32A9f"
+    }
+  },
   "rpcInfo": {
     "endpointLabel": "PublicNode",
     "fallbacksAttempted": 0,
-    "latencyMs": 1628,
+    "latencyMs": 838,
     "sourceChainId": 1,
     "sourceRpcHost": "ethereum-rpc.publicnode.com",
     "sourceRpcId": "publicnode",
@@ -21,11 +47,5 @@
   },
   "source": "github-actions",
   "status": "loaded",
-  "token": {
-    "address": "0xCf6A0A7826fa124B7705d6f3c675eAD76f1e540D",
-    "decimals": 18,
-    "label": "REP migrated",
-    "symbol": "REPv2_Yes_1"
-  },
   "totalRep": "11000000"
 }

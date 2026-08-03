@@ -36,6 +36,13 @@
   font-weight: 400;
 }
 
+@font-face {
+  font-family: "ForkWatch Korean";
+  src: url("/fonts/noto-sans-cjk-kr-subset.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 400;
+}
+
 :root {
   color-scheme: dark;
   --background: var(--color-background);
@@ -55,13 +62,15 @@
   --red: var(--color-red);
   --shadow-color: 0 0 0;
   --font-body:
-    "IBM Plex Mono", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    "IBM Plex Mono", "ForkWatch Korean", "Noto Sans Mono CJK KR",
+    "Noto Sans CJK KR", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
     monospace;
   --font-display-family:
-    "Handjet", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
-    sans-serif;
+    "Handjet", "ForkWatch Korean", "Noto Sans CJK KR", "Noto Sans KR",
+    "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   --font-ibm-plex-mono:
-    "IBM Plex Mono", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    "IBM Plex Mono", "ForkWatch Korean", "Noto Sans Mono CJK KR",
+    "Noto Sans CJK KR", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
     monospace;
 }
 
@@ -89,20 +98,24 @@
   --color-red: var(--color-red-500);
 
   --default-font-family:
-    "IBM Plex Mono", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    "IBM Plex Mono", "ForkWatch Korean", "Noto Sans Mono CJK KR",
+    "Noto Sans CJK KR", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
     monospace;
   --font-sans:
-    "IBM Plex Mono", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    "IBM Plex Mono", "ForkWatch Korean", "Noto Sans Mono CJK KR",
+    "Noto Sans CJK KR", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
     monospace;
   --font-mono:
-    "IBM Plex Mono", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    "IBM Plex Mono", "ForkWatch Korean", "Noto Sans Mono CJK KR",
+    "Noto Sans CJK KR", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
     monospace;
   --font-display:
-    "Handjet", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
-    sans-serif;
+    "Handjet", "ForkWatch Korean", "Noto Sans CJK KR", "Noto Sans KR",
+    "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   --font-display-tracking: var(--tracking-wider);
   --font-prose:
-    "IBM Plex Mono", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    "IBM Plex Mono", "ForkWatch Korean", "Noto Sans Mono CJK KR",
+    "Noto Sans CJK KR", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
     monospace;
 
   --glow-size-xs: 0.1375rem;
@@ -404,6 +417,25 @@ a {
   filter: drop-shadow(0 0 var(--glow-size-lg, 1rem) var(--primary));
 }
 
+.fork-title-status {
+  display: inline-grid;
+  vertical-align: baseline;
+}
+
+.fork-title-status-previous,
+.fork-title-status-current {
+  grid-area: 1 / 1;
+  transform-origin: left center;
+}
+
+.fork-title-status-previous {
+  animation: fork-title-status-out 4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.fork-title-status-current {
+  animation: fork-title-status-in 4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @keyframes bounce-horizontal {
   0%,
   100% {
@@ -446,6 +478,32 @@ a {
   }
 }
 
+@keyframes fork-title-status-out {
+  0%,
+  50% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  75%,
+  100% {
+    opacity: 0;
+    transform: translateY(-0.24em);
+  }
+}
+
+@keyframes fork-title-status-in {
+  0%,
+  56% {
+    opacity: 0;
+    transform: translateY(0.24em);
+  }
+  86%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -465,6 +523,17 @@ a {
 
   .visual-card:hover,
   .polished-card:hover {
+    transform: none;
+  }
+
+  .fork-title-status-previous {
+    display: none;
+    animation: none;
+  }
+
+  .fork-title-status-current {
+    animation: none;
+    opacity: 1;
     transform: none;
   }
 }

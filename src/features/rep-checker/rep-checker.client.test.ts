@@ -1,7 +1,7 @@
 import type { PublicClient } from "viem";
 import { describe, expect, it } from "vitest";
 import type { EthereumRpcEndpoint } from "@/domain/ethereum/rpc-endpoints";
-import type { RepToken } from "@/domain/tokens/rep-tokens";
+import { REP_TOKENS, type RepToken } from "@/domain/tokens/rep-tokens";
 import { checkWalletRep } from "./rep-checker.client";
 import type { RepTokenBalance } from "./rep-checker.types";
 
@@ -121,5 +121,42 @@ describe("checkWalletRep", () => {
     );
 
     expect(result.status).toBe("found");
+  });
+
+  it("reads and reports a REPv2_No_1-only balance", async () => {
+    const result = await checkWalletRep(
+      "0x0000000000000000000000000000000000000000",
+      {
+        createClient: () =>
+          ({
+            getChainId: async () => 1,
+          }) as PublicClient,
+        endpoints: [endpoints[1]],
+        readBalance: async (_client, token) =>
+          loadedBalance(
+            token,
+            token.symbol === "REPv2_No_1"
+              ? {
+                  balance: "1 REP",
+                  balanceRaw: "1000000000000000000",
+                  hasBalance: true,
+                }
+              : {},
+          ),
+      },
+    );
+
+    expect(result.status).toBe("found");
+
+    if (result.status === "found") {
+      expect(result.balances).toHaveLength(4);
+      expect(result.balances).toContainEqual(
+        expect.objectContaining({
+          hasBalance: true,
+          token: "REPv2_No_1",
+          tokenAddress: REP_TOKENS.repV2No1.address,
+        }),
+      );
+    }
   });
 });

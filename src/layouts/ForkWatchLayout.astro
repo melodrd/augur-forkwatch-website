@@ -3,14 +3,20 @@ import type { Locale } from "@/i18n/locales";
 import Layout from "./Layout.astro";
 
 type Props = {
+  dateModified?: string;
   description: string;
   locale: Locale;
   title: string;
 };
 
-const { description, locale, title } = Astro.props;
+const { dateModified, description, locale, title } = Astro.props;
 ---
 
-<Layout description={description} locale={locale} title={title}>
+<Layout
+  dateModified={dateModified}
+  description={description}
+  locale={locale}
+  title={title}
+>
   <slot />
 </Layout>

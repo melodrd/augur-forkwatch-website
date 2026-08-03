@@ -11,20 +11,32 @@ export type MigrationProgressFreshness =
   | "unknown"
   | "very-stale";
 
+export type MigrationOutcomeKey = "no" | "yes";
+
+export type MigrationTokenMetadata = {
+  address: string;
+  symbol: string | null;
+  decimals: number;
+  label: string;
+};
+
+export type MigrationOutcomeSnapshot = {
+  universeAddress: string;
+  token: MigrationTokenMetadata;
+  supplyRaw: string | null;
+  supplyRep: string | null;
+  supplyPercent: number | null;
+};
+
 export type MigrationProgressJson = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   status: MigrationProgressStatus;
   checkedAt: string;
   lastSuccessAt: string | null;
   source: "github-actions";
   chainId: 1;
   blockNumber: string | null;
-  token: {
-    address: string;
-    symbol: string | null;
-    decimals: number;
-    label: string;
-  };
+  outcomes: Record<MigrationOutcomeKey, MigrationOutcomeSnapshot>;
   migratedRaw: string | null;
   migratedRep: string | null;
   migratedPercent: number | null;

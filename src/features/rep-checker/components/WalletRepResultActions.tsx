@@ -1,10 +1,6 @@
 import { useState } from "react";
-import { ExternalLinkWithWarning } from "@/components/ui/ExternalLinkWithWarning";
 import { SafetyDialog } from "@/components/ui/SafetyDialog";
-import {
-  OFFICIAL_MIGRATION_GUIDE_URL,
-  OFFICIAL_MIGRATION_PAGE_URL,
-} from "@/domain/migration/migration.constants";
+import { OFFICIAL_MIGRATION_GUIDE_URL } from "@/domain/migration/migration.constants";
 import { getCopy } from "@/i18n";
 import type { Locale } from "@/i18n/locales";
 import type { WalletRepResultKind } from "../rep-checker.types";
@@ -15,14 +11,15 @@ type WalletRepResultActionsProps = {
   onCheckAnother: () => void;
 };
 
-function shouldShowGuide(kind: WalletRepResultKind): boolean {
+function shouldShowReferenceLinks(kind: WalletRepResultKind): boolean {
   return (
     kind === "both" ||
+    kind === "legacyAndMigrated" ||
+    kind === "migrated" ||
     kind === "none" ||
     kind === "partial" ||
     kind === "repv1" ||
-    kind === "repv2" ||
-    kind === "repv2Yes1"
+    kind === "repv2"
   );
 }
 
@@ -33,7 +30,7 @@ export function WalletRepResultActions({
 }: WalletRepResultActionsProps) {
   const copy = getCopy(locale).repChecker;
   const [isGuideWarningVisible, setIsGuideWarningVisible] = useState(false);
-  const showMigrationLinks = shouldShowGuide(kind);
+  const showReferenceLinks = shouldShowReferenceLinks(kind);
   const guideWarnings = [
     copy.guideWarning.verifyUrl,
     copy.guideWarning.neverShareSecrets,
@@ -48,7 +45,7 @@ export function WalletRepResultActions({
   return (
     <div className="mt-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-        {showMigrationLinks ? (
+        {showReferenceLinks ? (
           <button
             className="btn-terminal-secondary min-h-10 px-4 py-2"
             onClick={() => setIsGuideWarningVisible(true)}
@@ -64,15 +61,6 @@ export function WalletRepResultActions({
         >
           {copy.actions.checkAnother}
         </button>
-        {showMigrationLinks ? (
-          <ExternalLinkWithWarning
-            className="btn-terminal-primary min-h-10 px-4 py-2"
-            href={OFFICIAL_MIGRATION_PAGE_URL}
-            locale={locale}
-          >
-            {copy.actions.migrationWebsite}
-          </ExternalLinkWithWarning>
-        ) : null}
       </div>
 
       <SafetyDialog

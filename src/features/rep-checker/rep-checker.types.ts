@@ -15,11 +15,12 @@ export type WalletRepResultKind =
   | "both"
   | "error"
   | "invalid"
+  | "legacyAndMigrated"
+  | "migrated"
   | "none"
   | "partial"
   | "repv1"
-  | "repv2"
-  | "repv2Yes1";
+  | "repv2";
 
 export type RepTokenBalance = {
   chainId: 1;

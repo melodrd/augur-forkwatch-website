@@ -2,6 +2,7 @@ import { MigrationReadinessCard } from "@/components/migration/MigrationReadines
 import { RepMigrationProgressBar } from "@/components/migration/RepMigrationProgressBar";
 import { ExternalLinkWithWarning } from "@/components/ui/ExternalLinkWithWarning";
 import { forkFaqCards } from "@/content/fork/fork-faq";
+import { useMigrationProgress } from "@/features/migration/useMigrationProgress";
 import { getCopy } from "@/i18n";
 import type { Locale } from "@/i18n/locales";
 
@@ -20,19 +21,28 @@ function ForkFaqCard({
   locale,
   question,
 }: ForkFaqCardProps) {
+  const ctaClassName =
+    "menu-link mt-auto inline-flex items-center pt-4 font-display text-xl uppercase leading-none text-primary transition hover:text-loud-foreground";
+
   return (
     <article className="polished-card flex h-full flex-col p-4">
       <p className="font-display text-2xl uppercase leading-none text-foreground">
         &gt;_ {question}
       </p>
       <p className="mt-3 text-sm leading-6 text-foreground/80">{answer}</p>
-      <ExternalLinkWithWarning
-        className="menu-link mt-auto inline-flex items-center pt-4 font-display text-xl uppercase leading-none text-primary transition hover:text-loud-foreground"
-        href={ctaHref}
-        locale={locale}
-      >
-        {ctaLabel}
-      </ExternalLinkWithWarning>
+      {ctaHref.startsWith("#") ? (
+        <a className={ctaClassName} href={ctaHref}>
+          {ctaLabel}
+        </a>
+      ) : (
+        <ExternalLinkWithWarning
+          className={ctaClassName}
+          href={ctaHref}
+          locale={locale}
+        >
+          {ctaLabel}
+        </ExternalLinkWithWarning>
+      )}
     </article>
   );
 }
@@ -43,6 +53,7 @@ type ForkOverviewProps = {
 
 export function ForkOverview({ locale }: ForkOverviewProps) {
   const copy = getCopy(locale).overview;
+  const migrationProgress = useMigrationProgress();
 
   return (
     <section
@@ -58,7 +69,15 @@ export function ForkOverview({ locale }: ForkOverviewProps) {
           className="mt-2 font-display text-3xl uppercase leading-none text-foreground sm:text-5xl md:text-6xl lg:text-7xl"
           id="overview-title"
         >
-          {copy.title}
+          <span>{copy.titlePrefix}</span>{" "}
+          <span className="fork-title-status">
+            <span aria-hidden="true" className="fork-title-status-previous">
+              {copy.titlePreviousStatus}
+            </span>
+            <span className="fork-title-status-current">
+              {copy.titleStatus}
+            </span>
+          </span>
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-foreground/80">
           {copy.subtitle}
@@ -68,7 +87,7 @@ export function ForkOverview({ locale }: ForkOverviewProps) {
       <div className="visual-surface p-3 sm:p-4">
         <div className="grid gap-4">
           <MigrationReadinessCard locale={locale} />
-          <RepMigrationProgressBar locale={locale} />
+          <RepMigrationProgressBar locale={locale} state={migrationProgress} />
         </div>
       </div>
 

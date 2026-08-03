@@ -10,10 +10,23 @@ export function WalletRepBalanceSummary({
   locale: Locale;
   result: RepBalanceCheckResult;
 }) {
-  const tokenReadError = getCopy(locale).repChecker.messages.tokenReadError;
+  const repCheckerCopy = getCopy(locale).repChecker;
+  const tokenReadError = repCheckerCopy.messages.tokenReadError;
+
+  function getTokenLabel(token: string): string {
+    if (token === "REPv2_Yes_1") {
+      return repCheckerCopy.migratedRepYesLabel;
+    }
+
+    if (token === "REPv2_No_1") {
+      return repCheckerCopy.migratedRepNoLabel;
+    }
+
+    return token;
+  }
 
   return (
-    <dl className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <dl className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {result.balances.map((balance) => (
         <div
           className="border border-primary/10 bg-background/70 p-3"
@@ -21,7 +34,7 @@ export function WalletRepBalanceSummary({
         >
           <dt className="flex items-center justify-between gap-3">
             <span className="font-display text-xl uppercase leading-none text-foreground">
-              {balance.token}
+              {getTokenLabel(balance.token)}
             </span>
           </dt>
           <dd className="mt-3 font-mono text-sm text-loud-foreground">

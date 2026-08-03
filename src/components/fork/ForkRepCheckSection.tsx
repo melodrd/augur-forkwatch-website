@@ -21,6 +21,9 @@ export function ForkRepCheckSection({ locale }: ForkRepCheckSectionProps) {
         id="check-title"
         title={copy.sectionTitle}
       />
+      <p className="border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-foreground/80">
+        {copy.archiveNotice}
+      </p>
       <WalletRepChecker locale={locale} showTitle={false} />
     </section>
   );

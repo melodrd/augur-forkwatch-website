@@ -3,17 +3,9 @@ import type { ForkFaqId } from "@/content/fork/fork-faq";
 import type { ForkSectionId } from "@/content/fork/fork-sections";
 import type { WalletRepResultKind } from "@/features/rep-checker/rep-checker.types";
 
-export type CountdownParts = {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-};
-
-export type TimelineRange = {
+export type CompletedTimelineRange = {
   start: string;
   end: string;
-  now: string;
 };
 
 export type CheckedThroughArgs = {
@@ -52,6 +44,60 @@ type RepResultCopy = {
   warning?: string;
 };
 
+type RepCheckerPhaseCopy = {
+  sectionEyebrow: string;
+  sectionTitle: string;
+  balanceCheckTitle: string;
+  addressLabel: string;
+  checkButton: string;
+  checkingButton: string;
+  migratedRepYesLabel: string;
+  migratedRepNoLabel: string;
+  scopeCards: {
+    whyItMatters: ScopeCardCopy;
+    scope: ScopeCardCopy;
+    warning: ScopeCardCopy;
+  };
+  checking: {
+    eyebrow: string;
+    title: string;
+    body: string;
+  };
+  resultNotice: {
+    deadlineAction: string;
+    details: string;
+  };
+  warningLabel: string;
+  scopeNote: {
+    eyebrow: string;
+    body: string;
+    liability: string;
+  };
+  addressField: string;
+  checkedThrough: (args: CheckedThroughArgs) => string;
+  results: Record<WalletRepResultKind, RepResultCopy>;
+  actions: {
+    migrationInstructions: string;
+    checkAnother: string;
+  };
+  guideWarning: {
+    verifyUrl: string;
+    neverShareSecrets: string;
+    startFromBookmark: string;
+  };
+  guideDialog: {
+    eyebrow: string;
+    title: string;
+    confirmLabel: string;
+  };
+  messages: {
+    invalidAddress: string;
+    rpcError: string;
+    tokenReadError: string;
+    balanceUnavailable: string;
+  };
+};
+
 /**
  * The complete set of user-facing strings for one locale. Every dictionary
  * (`en`, `ko`) is declared `satisfies SiteCopy`, so TypeScript guarantees key
@@ -82,54 +128,62 @@ export type SiteCopy = {
   };
   overview: {
     eyebrow: string;
-    title: string;
+    titlePrefix: string;
+    titlePreviousStatus: string;
+    titleStatus: string;
     subtitle: string;
     faq: Record<ForkFaqId, FaqCardCopy>;
   };
   migrationCard: {
-    ariaLabel: string;
-    eyebrow: string;
-    timeRemaining: string;
-    liveCountdown: string;
-    units: {
-      days: string;
-      hours: string;
-      minutes: string;
-      seconds: string;
-    };
-    countdownSrText: (parts: CountdownParts) => string;
-    timelineTitle: string;
-    timelineAriaLabel: (range: TimelineRange) => string;
-    now: string;
     start: string;
     deadline: string;
     cutoffTime: string;
     utcLabel: string;
     localLabel: string;
-    warningLabel: string;
-    warningBody: string;
-    nextActionLabel: string;
-    nextActionBody: string;
-    checkRepButton: string;
-    migrationInstructions: string;
-    migrationWebsite: string;
-    loadingDeadline: string;
-    deadlineUnavailableShort: string;
-    deadlineUnavailable: string;
+    ended: {
+      ariaLabel: string;
+      eyebrow: string;
+      badge: string;
+      title: string;
+      body: string;
+      timelineTitle: string;
+      timelineAriaLabel: (range: CompletedTimelineRange) => string;
+      timelineMarker: string;
+      warningLabel: string;
+      warningBody: string;
+      nextActionLabel: string;
+      nextActionBody: string;
+      checkRepButton: string;
+      migrationInstructions: string;
+    };
   };
   progressBar: {
-    ariaLabel: string;
-    eyebrow: string;
     progressUnavailable: string;
     loading: string;
     loadingStatus: string;
     fileUnavailable: string;
-    readFailedWithDuration: (duration: string) => string;
     readFailed: string;
     ethReadUnavailable: string;
-    progressDescription: (percent: string) => string;
     lastCheckedPending: string;
     lastChecked: (timestamp: string) => string;
+    ended: {
+      ariaLabel: string;
+      eyebrow: string;
+      amountLabel: string;
+      supplyTitle: string;
+      supplyDescription: (percent: string) => string;
+      sourceLabel: (timestamp: string) => string;
+      blockLabel: (blockNumber: string) => string;
+      outcomeSectionLabel: string;
+      outcomeSectionTitle: string;
+      yesOutcomeLabel: string;
+      noOutcomeLabel: string;
+      tokenSupplyLabel: string;
+      tokenContractLabel: string;
+      childUniverseLabel: string;
+      parentUniverseLabel: string;
+      etherscanLabel: string;
+    };
   };
   scamWarning: {
     eyebrow: string;
@@ -140,61 +194,13 @@ export type SiteCopy = {
     eyebrow: string;
     title: string;
     trackedExchanges: string;
+    archiveNotice: string;
     explainAriaLabel: (title: string) => string;
     groups: Record<ExchangeGroupId, ExchangeGroupCopy>;
     upbitNotice?: UpbitNoticeCopy;
   };
-  repChecker: {
-    sectionEyebrow: string;
-    sectionTitle: string;
-    balanceCheckTitle: string;
-    addressLabel: string;
-    checkButton: string;
-    checkingButton: string;
-    scopeCards: {
-      whyItMatters: ScopeCardCopy;
-      scope: ScopeCardCopy;
-      warning: ScopeCardCopy;
-    };
-    checking: {
-      eyebrow: string;
-      title: string;
-      body: string;
-    };
-    resultNotice: {
-      deadlineAction: string;
-      details: string;
-    };
-    warningLabel: string;
-    scopeNote: {
-      eyebrow: string;
-      body: string;
-      liability: string;
-    };
-    addressField: string;
-    checkedThrough: (args: CheckedThroughArgs) => string;
-    results: Record<WalletRepResultKind, RepResultCopy>;
-    actions: {
-      migrationInstructions: string;
-      checkAnother: string;
-      migrationWebsite: string;
-    };
-    guideWarning: {
-      verifyUrl: string;
-      neverShareSecrets: string;
-      startFromBookmark: string;
-    };
-    guideDialog: {
-      eyebrow: string;
-      title: string;
-      confirmLabel: string;
-    };
-    messages: {
-      invalidAddress: string;
-      rpcError: string;
-      tokenReadError: string;
-      balanceUnavailable: string;
-    };
+  repChecker: RepCheckerPhaseCopy & {
+    archiveNotice: string;
   };
   footer: {
     summaryAriaLabel: string;
@@ -212,11 +218,5 @@ export type SiteCopy = {
     title: string;
     warningPrimary: string;
     warningSecondary: string;
-  };
-  duration: {
-    lessThanMinute: string;
-    minutes: (value: number) => string;
-    hours: (value: number) => string;
-    days: (value: number) => string;
   };
 };

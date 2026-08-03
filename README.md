@@ -2,8 +2,9 @@
 
 Source for the ForkWatch website.
 
-The site is a static Astro + React frontend for Augur fork safety content, REP
-holder checks, and migration progress data generated from Ethereum mainnet reads.
+The site is a static Astro + React post-fork archive for Augur fork safety
+content, REP holder checks, and migrated-supply data generated from Ethereum
+mainnet reads.
 
 ## Stack
 
@@ -36,7 +37,8 @@ scripts/
 └── validate-migration-progress.ts
 
 public/
-└── data/migration-progress.json
+├── data/migration-progress.json
+└── fonts/                  # Self-hosted display, body, and Korean glyphs
 ```
 
 ## Development
@@ -116,6 +118,24 @@ and committed at
 
 Pull requests validate committed data. Scheduled and main-branch workflow runs
 regenerate the data before building.
+
+The post-fork generator pins every ERC-20 read to one Ethereum block and reads
+`totalSupply()`, `decimals()`, and `symbol()` from both outcome tokens:
+
+- Yes: `0xCf6A0A7826fa124B7705d6f3c675eAD76f1e540D`, in child universe
+  `0x281171519Fb41540528398d8ED3EA257f0F32A9f`
+- No: `0x2F4005456c2F098358213f01DbE34abDAa2989A4`, in child universe
+  `0xbaaD633FAa0E4847A4b66043E3E92102e5800546`
+
+Both child universes forked from
+`0x49244BD018Ca9fd1f06ecC07B9E9De773246e5AA`. Schema v2 stores each outcome's
+token metadata and supply separately. The top-level migrated amount is the sum
+of Yes and No, and all percentages compare against the original 11 million REP
+supply. If a scheduled RPC read fails, the generated error record retains the
+last complete dual-outcome snapshot instead of mixing old and new values.
+
+The UI itself is statically in the completed-fork state. Deployment timing—not
+client-side clock logic—controls when that version goes live.
 
 ## Styling
 

@@ -1,20 +1,96 @@
-import { formatUnits } from "viem";
+import { formatUnits, isAddress } from "viem";
 import type { EthereumRpcSourceInfo } from "@/domain/ethereum/rpc-endpoints";
 import { joinBasePath } from "@/lib/base-url";
 import {
+  AUGUR_FORK_END_TIME_FALLBACK_UNIX_SECONDS,
   FRESH_MS,
   MIGRATION_PROGRESS_DATA_PATH,
   MIGRATION_PROGRESS_SOURCE,
-  REP_MIGRATION_TOKEN,
-  REP_MIGRATION_TOKEN_ADDRESS,
+  REP_MIGRATION_OUTCOME_CONFIG,
   TOTAL_REP_SUPPLY,
   VERY_STALE_MS,
 } from "./migration-progress.constants";
 import type {
+  MigrationOutcomeKey,
+  MigrationOutcomeSnapshot,
   MigrationProgressErrorCode,
   MigrationProgressFreshness,
   MigrationProgressJson,
+  MigrationTokenMetadata,
 } from "./migration-progress.types";
+import type { MigrationOutcomeTokenSnapshot } from "./migration-token-snapshot";
+
+const MAX_DATE_UNIX_SECONDS = 8_640_000_000_000;
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+function addressesEqual(left: string, right: string): boolean {
+  return left.toLowerCase() === right.toLowerCase();
+}
+
+function isNonZeroAddress(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    isAddress(value) &&
+    !addressesEqual(value, ZERO_ADDRESS)
+  );
+}
+
+function isValidIsoTimestamp(value: unknown): value is string {
+  if (typeof value !== "string") {
+    return false;
+  }
+
+  const timestamp = Date.parse(value);
+  return (
+    Number.isFinite(timestamp) && new Date(timestamp).toISOString() === value
+  );
+}
+
+function isSafeUnixTimestamp(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isSafeInteger(value) &&
+    value >= 0 &&
+    value <= MAX_DATE_UNIX_SECONDS
+  );
+}
+
+function isValidTokenMetadata(value: unknown): value is MigrationTokenMetadata {
+  return (
+    isObject(value) &&
+    isNonZeroAddress(value.address) &&
+    (typeof value.symbol === "string" || value.symbol === null) &&
+    typeof value.decimals === "number" &&
+    Number.isInteger(value.decimals) &&
+    value.decimals >= 0 &&
+    value.decimals <= 255 &&
+    typeof value.label === "string" &&
+    value.label.trim().length > 0
+  );
+}
+
+function isNonNegativeIntegerString(value: unknown): value is string {
+  return typeof value === "string" && /^\d+$/.test(value);
+}
+
+function isValidPercent(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isFinite(value) &&
+    value >= 0 &&
+    value <= 100
+  );
+}
+
+export function unixTimestampToSafeNumber(
+  timestamp: bigint,
+  label = "Unix timestamp",
+): number {
+  if (timestamp < 0n || timestamp > BigInt(MAX_DATE_UNIX_SECONDS)) {
+    throw new Error(`${label} is outside the safe JavaScript Date range.`);
+  }
+
+  return Number(timestamp);
+}
 
 export function tokenSupplyToNumber(
   totalSupplyRaw: bigint,
@@ -54,6 +130,7 @@ export function calculateMigrationPercentFromRaw({
   if (
     !Number.isInteger(decimals) ||
     decimals < 0 ||
+    migratedRaw < 0n ||
     !Number.isFinite(totalRep) ||
     totalRep <= 0
   ) {
@@ -67,7 +144,8 @@ export function calculateMigrationPercentFromRaw({
     return null;
   }
 
-  const basisPoints = (migratedRaw * scale) / denominator;
+  const scaledSupply = migratedRaw * scale;
+  const basisPoints = (scaledSupply * 2n + denominator) / (denominator * 2n);
   const clampedBasisPoints = basisPoints > scale ? scale : basisPoints;
 
   return Number(clampedBasisPoints) / 100;
@@ -105,49 +183,179 @@ function isValidMigrationError(value: unknown): boolean {
   );
 }
 
-export function isMigrationProgressJson(
+function isCanonicalUintString(value: unknown): value is string {
+  return (
+    isNonNegativeIntegerString(value) && BigInt(value).toString() === value
+  );
+}
+
+function isValidRpcInfo(
   value: unknown,
-): value is MigrationProgressJson {
-  if (!isObject(value) || !isObject(value.token) || !isObject(value.rpcInfo)) {
+  hasSuccessfulSnapshot: boolean,
+): boolean {
+  if (!isObject(value)) {
     return false;
   }
 
+  if (!hasSuccessfulSnapshot) {
+    return (
+      value.endpointLabel === null &&
+      value.fallbacksAttempted === null &&
+      value.latencyMs === null &&
+      value.sourceChainId === null &&
+      value.sourceRpcHost === null &&
+      value.sourceRpcId === null &&
+      value.sourceRpcLabel === null &&
+      value.sourceRpcPublic === null
+    );
+  }
+
   return (
-    value.schemaVersion === 1 &&
-    (value.status === "loaded" || value.status === "error") &&
-    typeof value.checkedAt === "string" &&
-    (typeof value.lastSuccessAt === "string" || value.lastSuccessAt === null) &&
-    value.source === MIGRATION_PROGRESS_SOURCE &&
-    value.chainId === 1 &&
-    (typeof value.blockNumber === "string" || value.blockNumber === null) &&
-    typeof value.token.address === "string" &&
-    (typeof value.token.symbol === "string" || value.token.symbol === null) &&
-    typeof value.token.decimals === "number" &&
-    typeof value.token.label === "string" &&
-    (typeof value.migratedRaw === "string" || value.migratedRaw === null) &&
-    (typeof value.migratedRep === "string" || value.migratedRep === null) &&
-    (typeof value.migratedPercent === "number" ||
-      value.migratedPercent === null) &&
-    (typeof value.forkEndTime === "number" || value.forkEndTime === null) &&
-    typeof value.totalRep === "string" &&
-    (typeof value.rpcInfo.endpointLabel === "string" ||
-      value.rpcInfo.endpointLabel === null) &&
-    (typeof value.rpcInfo.latencyMs === "number" ||
-      value.rpcInfo.latencyMs === null) &&
-    (typeof value.rpcInfo.fallbacksAttempted === "number" ||
-      value.rpcInfo.fallbacksAttempted === null) &&
-    (value.rpcInfo.sourceChainId === 1 ||
-      value.rpcInfo.sourceChainId === null) &&
-    (typeof value.rpcInfo.sourceRpcHost === "string" ||
-      value.rpcInfo.sourceRpcHost === null) &&
-    (typeof value.rpcInfo.sourceRpcId === "string" ||
-      value.rpcInfo.sourceRpcId === null) &&
-    (typeof value.rpcInfo.sourceRpcLabel === "string" ||
-      value.rpcInfo.sourceRpcLabel === null) &&
-    (typeof value.rpcInfo.sourceRpcPublic === "boolean" ||
-      value.rpcInfo.sourceRpcPublic === null) &&
-    isValidMigrationError(value.error)
+    typeof value.endpointLabel === "string" &&
+    value.endpointLabel.trim().length > 0 &&
+    typeof value.fallbacksAttempted === "number" &&
+    Number.isInteger(value.fallbacksAttempted) &&
+    value.fallbacksAttempted >= 0 &&
+    typeof value.latencyMs === "number" &&
+    Number.isFinite(value.latencyMs) &&
+    value.latencyMs >= 0 &&
+    value.sourceChainId === 1 &&
+    typeof value.sourceRpcHost === "string" &&
+    value.sourceRpcHost.trim().length > 0 &&
+    typeof value.sourceRpcId === "string" &&
+    value.sourceRpcId.trim().length > 0 &&
+    typeof value.sourceRpcLabel === "string" &&
+    value.sourceRpcLabel.trim().length > 0 &&
+    typeof value.sourceRpcPublic === "boolean"
   );
+}
+
+function isValidOutcomeSnapshot(
+  value: unknown,
+  outcome: MigrationOutcomeKey,
+  hasSuccessfulSnapshot: boolean,
+): value is MigrationOutcomeSnapshot {
+  const config = REP_MIGRATION_OUTCOME_CONFIG[outcome];
+
+  if (
+    !isObject(value) ||
+    !isObject(value.token) ||
+    !isValidTokenMetadata(value.token) ||
+    !isNonZeroAddress(value.universeAddress) ||
+    !addressesEqual(value.universeAddress, config.universeAddress) ||
+    !addressesEqual(value.token.address as string, config.tokenAddress) ||
+    value.token.decimals !== config.decimals ||
+    value.token.label !== config.label
+  ) {
+    return false;
+  }
+
+  if (!hasSuccessfulSnapshot) {
+    return (
+      value.supplyRaw === null &&
+      value.supplyRep === null &&
+      value.supplyPercent === null
+    );
+  }
+
+  if (
+    !isCanonicalUintString(value.supplyRaw) ||
+    typeof value.supplyRep !== "string" ||
+    !isValidPercent(value.supplyPercent)
+  ) {
+    return false;
+  }
+
+  const supplyRaw = BigInt(value.supplyRaw);
+
+  return (
+    value.supplyRep ===
+      tokenSupplyToDecimalString(supplyRaw, value.token.decimals) &&
+    value.supplyPercent ===
+      calculateMigrationPercentFromRaw({
+        decimals: value.token.decimals,
+        migratedRaw: supplyRaw,
+        totalRep: TOTAL_REP_SUPPLY,
+      })
+  );
+}
+
+export function isMigrationProgressJson(
+  value: unknown,
+): value is MigrationProgressJson {
+  if (
+    !isObject(value) ||
+    !isObject(value.outcomes) ||
+    !isObject(value.rpcInfo)
+  ) {
+    return false;
+  }
+
+  const hasSuccessfulSnapshot = value.blockNumber !== null;
+
+  if (
+    value.schemaVersion !== 2 ||
+    (value.status !== "loaded" && value.status !== "error") ||
+    !isValidIsoTimestamp(value.checkedAt) ||
+    value.source !== MIGRATION_PROGRESS_SOURCE ||
+    value.chainId !== 1 ||
+    value.totalRep !== TOTAL_REP_SUPPLY.toString() ||
+    !isValidMigrationError(value.error) ||
+    !isValidOutcomeSnapshot(value.outcomes.yes, "yes", hasSuccessfulSnapshot) ||
+    !isValidOutcomeSnapshot(value.outcomes.no, "no", hasSuccessfulSnapshot) ||
+    !isValidRpcInfo(value.rpcInfo, hasSuccessfulSnapshot)
+  ) {
+    return false;
+  }
+
+  if (!hasSuccessfulSnapshot) {
+    return (
+      value.status === "error" &&
+      value.error !== null &&
+      value.blockNumber === null &&
+      value.lastSuccessAt === null &&
+      value.forkEndTime === null &&
+      value.migratedRaw === null &&
+      value.migratedRep === null &&
+      value.migratedPercent === null
+    );
+  }
+
+  if (
+    !isCanonicalUintString(value.blockNumber) ||
+    !isValidIsoTimestamp(value.lastSuccessAt) ||
+    !isSafeUnixTimestamp(value.forkEndTime) ||
+    value.forkEndTime !== AUGUR_FORK_END_TIME_FALLBACK_UNIX_SECONDS ||
+    !isCanonicalUintString(value.migratedRaw) ||
+    typeof value.migratedRep !== "string" ||
+    !isValidPercent(value.migratedPercent) ||
+    value.outcomes.yes.supplyRaw === null ||
+    value.outcomes.no.supplyRaw === null
+  ) {
+    return false;
+  }
+
+  const combinedRaw =
+    BigInt(value.outcomes.yes.supplyRaw) + BigInt(value.outcomes.no.supplyRaw);
+  const decimals = value.outcomes.yes.token.decimals;
+
+  if (
+    value.outcomes.no.token.decimals !== decimals ||
+    value.migratedRaw !== combinedRaw.toString() ||
+    value.migratedRep !== tokenSupplyToDecimalString(combinedRaw, decimals) ||
+    value.migratedPercent !==
+      calculateMigrationPercentFromRaw({
+        decimals,
+        migratedRaw: combinedRaw,
+        totalRep: TOTAL_REP_SUPPLY,
+      })
+  ) {
+    return false;
+  }
+
+  return value.status === "loaded"
+    ? value.error === null && value.lastSuccessAt === value.checkedAt
+    : value.error !== null;
 }
 
 export function parseMigrationProgressPayload(
@@ -183,49 +391,107 @@ export function calculateMigrationProgressFreshness(
 export function buildLoadedMigrationProgressJson({
   blockNumber,
   checkedAt,
-  decimals,
   endpointLabel,
   fallbacksAttempted,
   forkEndTime,
   latencyMs,
-  migratedRaw,
+  outcomes,
   rpcSource,
   sourceChainId,
-  symbol,
-  tokenAddress = REP_MIGRATION_TOKEN_ADDRESS,
-  tokenLabel = REP_MIGRATION_TOKEN.name,
 }: {
   blockNumber: string;
   checkedAt: string;
-  decimals: number;
   endpointLabel: string;
   fallbacksAttempted: number;
   forkEndTime: bigint;
   latencyMs: number;
-  migratedRaw: bigint;
+  outcomes: Record<MigrationOutcomeKey, MigrationOutcomeTokenSnapshot>;
   rpcSource: EthereumRpcSourceInfo;
   sourceChainId: 1;
-  symbol: string | null;
-  tokenAddress?: string;
-  tokenLabel?: string;
 }): MigrationProgressJson {
-  const migratedRep = tokenSupplyToDecimalString(migratedRaw, decimals);
+  const forkEndTimeNumber = unixTimestampToSafeNumber(
+    forkEndTime,
+    "Augur fork end time",
+  );
 
-  return {
-    schemaVersion: 1,
+  if (forkEndTimeNumber !== AUGUR_FORK_END_TIME_FALLBACK_UNIX_SECONDS) {
+    throw new Error(
+      `Fork end time ${forkEndTimeNumber} does not match configured cutoff ${AUGUR_FORK_END_TIME_FALLBACK_UNIX_SECONDS}.`,
+    );
+  }
+
+  const buildOutcome = (
+    outcome: MigrationOutcomeKey,
+  ): MigrationOutcomeSnapshot => {
+    const input = outcomes[outcome];
+    const config = REP_MIGRATION_OUTCOME_CONFIG[outcome];
+
+    if (
+      !addressesEqual(input.tokenAddress, config.tokenAddress) ||
+      !addressesEqual(input.universeAddress, config.universeAddress)
+    ) {
+      throw new Error(
+        `${outcome.toUpperCase()} migration supply must use the configured token and child universe.`,
+      );
+    }
+
+    if (input.decimals !== config.decimals) {
+      throw new Error(
+        `${outcome.toUpperCase()} migration token returned ${input.decimals} decimals; expected ${config.decimals}.`,
+      );
+    }
+
+    if (input.supplyRaw < 0n) {
+      throw new Error(
+        `${outcome.toUpperCase()} migration token returned a negative supply.`,
+      );
+    }
+
+    return {
+      supplyPercent: calculateMigrationPercentFromRaw({
+        decimals: input.decimals,
+        migratedRaw: input.supplyRaw,
+        totalRep: TOTAL_REP_SUPPLY,
+      }),
+      supplyRaw: input.supplyRaw.toString(),
+      supplyRep: tokenSupplyToDecimalString(input.supplyRaw, input.decimals),
+      token: {
+        address: input.tokenAddress,
+        decimals: input.decimals,
+        label: config.label,
+        symbol: input.symbol,
+      },
+      universeAddress: input.universeAddress,
+    };
+  };
+
+  const outcomeSnapshots = {
+    no: buildOutcome("no"),
+    yes: buildOutcome("yes"),
+  };
+  const combinedRaw = outcomes.yes.supplyRaw + outcomes.no.supplyRaw;
+  const combinedDecimals = outcomes.yes.decimals;
+
+  if (outcomes.no.decimals !== combinedDecimals) {
+    throw new Error("Migration outcome tokens must use the same decimals.");
+  }
+
+  const progress: MigrationProgressJson = {
+    schemaVersion: 2,
     blockNumber,
     chainId: 1,
     checkedAt,
     error: null,
-    forkEndTime: Number(forkEndTime),
+    forkEndTime: forkEndTimeNumber,
     lastSuccessAt: checkedAt,
     migratedPercent: calculateMigrationPercentFromRaw({
-      decimals,
-      migratedRaw,
+      decimals: combinedDecimals,
+      migratedRaw: combinedRaw,
       totalRep: TOTAL_REP_SUPPLY,
     }),
-    migratedRaw: migratedRaw.toString(),
-    migratedRep,
+    migratedRaw: combinedRaw.toString(),
+    migratedRep: tokenSupplyToDecimalString(combinedRaw, combinedDecimals),
+    outcomes: outcomeSnapshots,
     rpcInfo: {
       endpointLabel,
       fallbacksAttempted,
@@ -238,29 +504,44 @@ export function buildLoadedMigrationProgressJson({
     },
     source: MIGRATION_PROGRESS_SOURCE,
     status: "loaded",
-    token: {
-      address: tokenAddress,
-      decimals,
-      label: tokenLabel,
-      symbol,
-    },
     totalRep: TOTAL_REP_SUPPLY.toString(),
   };
+
+  if (!isMigrationProgressJson(progress)) {
+    throw new Error("Generated migration progress snapshot is inconsistent.");
+  }
+
+  return progress;
 }
 
 export function buildErrorMigrationProgressJson({
   checkedAt,
   code,
-  lastSuccessAt = null,
   message,
+  previousProgress = null,
 }: {
   checkedAt: string;
   code: MigrationProgressErrorCode;
-  lastSuccessAt?: string | null;
   message: string;
+  previousProgress?: MigrationProgressJson | null;
 }): MigrationProgressJson {
+  const hasLastSuccessfulSnapshot =
+    previousProgress !== null && previousProgress.blockNumber !== null;
+
+  if (hasLastSuccessfulSnapshot) {
+    return {
+      ...previousProgress,
+      checkedAt,
+      error: {
+        code,
+        message,
+      },
+      status: "error",
+    };
+  }
+
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     blockNumber: null,
     chainId: 1,
     checkedAt,
@@ -269,10 +550,36 @@ export function buildErrorMigrationProgressJson({
       message,
     },
     forkEndTime: null,
-    lastSuccessAt,
+    lastSuccessAt: null,
     migratedPercent: null,
     migratedRaw: null,
     migratedRep: null,
+    outcomes: {
+      no: {
+        supplyPercent: null,
+        supplyRaw: null,
+        supplyRep: null,
+        token: {
+          address: REP_MIGRATION_OUTCOME_CONFIG.no.tokenAddress,
+          decimals: REP_MIGRATION_OUTCOME_CONFIG.no.decimals,
+          label: REP_MIGRATION_OUTCOME_CONFIG.no.label,
+          symbol: null,
+        },
+        universeAddress: REP_MIGRATION_OUTCOME_CONFIG.no.universeAddress,
+      },
+      yes: {
+        supplyPercent: null,
+        supplyRaw: null,
+        supplyRep: null,
+        token: {
+          address: REP_MIGRATION_OUTCOME_CONFIG.yes.tokenAddress,
+          decimals: REP_MIGRATION_OUTCOME_CONFIG.yes.decimals,
+          label: REP_MIGRATION_OUTCOME_CONFIG.yes.label,
+          symbol: null,
+        },
+        universeAddress: REP_MIGRATION_OUTCOME_CONFIG.yes.universeAddress,
+      },
+    },
     rpcInfo: {
       endpointLabel: null,
       fallbacksAttempted: null,
@@ -285,12 +592,6 @@ export function buildErrorMigrationProgressJson({
     },
     source: MIGRATION_PROGRESS_SOURCE,
     status: "error",
-    token: {
-      address: REP_MIGRATION_TOKEN_ADDRESS,
-      decimals: REP_MIGRATION_TOKEN.decimals,
-      label: REP_MIGRATION_TOKEN.name,
-      symbol: null,
-    },
     totalRep: TOTAL_REP_SUPPLY.toString(),
   };
 }

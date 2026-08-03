@@ -90,6 +90,10 @@ export function ExchangeSupportSection({ locale }: SectionProps) {
         title={copy.title}
       />
 
+      <p className="border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-foreground/80">
+        {copy.archiveNotice}
+      </p>
+
       {copy.upbitNotice ? <UpbitNotice notice={copy.upbitNotice} /> : null}
 
       <div className="grid gap-4 lg:grid-cols-3">
