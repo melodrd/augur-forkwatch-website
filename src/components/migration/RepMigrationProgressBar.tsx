@@ -6,6 +6,7 @@ import {
   REP_MIGRATION_YES_TOKEN_ADDRESS,
   REP_MIGRATION_YES_UNIVERSE_ADDRESS,
 } from "@/features/migration/migration-progress.constants";
+import { getDominantOutcomeShare } from "@/features/migration/migration-progress.helpers";
 import type {
   MigrationOutcomeSnapshot,
   MigrationProgressLoadState,
@@ -147,7 +148,7 @@ function OutcomeCard({
 }: OutcomeCardProps) {
   const isYes = tone === "yes";
   const outcomeLabel = isYes ? copy.yesOutcomeLabel : copy.noOutcomeLabel;
-  const tokenSymbol = TOKEN_SYMBOLS[tone];
+  const tokenSymbol = outcome?.token.symbol || TOKEN_SYMBOLS[tone];
   const resolvedTokenAddress = outcome?.token.address || tokenAddress;
   const resolvedUniverseAddress =
     outcome?.universeAddress || childUniverseAddress;
@@ -177,12 +178,13 @@ function OutcomeCard({
           <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
             {outcomeLabel}
           </p>
-          <h3 className="mt-2 break-all font-display text-2xl uppercase leading-none text-loud-foreground sm:text-3xl">
+          {/* normal-case: this is the literal on-chain token symbol. */}
+          <h3 className="mt-2 break-all font-display text-2xl normal-case leading-none text-loud-foreground sm:text-3xl">
             {tokenSymbol}
           </h3>
         </div>
         <span className="border border-primary/45 bg-primary/10 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.18em] text-loud-foreground">
-          {tone}
+          {copy.outcomeBadge[tone]}
         </span>
       </div>
 
@@ -279,13 +281,29 @@ export function RepMigrationProgressBar({
     ? endedCopy.supplyDescription(percentLabel)
     : progressCopy.progressUnavailable;
   const statusMessage = getStatusMessage(state, copy);
+  const dominantShare = progress
+    ? getDominantOutcomeShare(progress.outcomes)
+    : null;
+  const dominantNote = dominantShare
+    ? endedCopy.dominantOutcomeNote({
+        outcome:
+          dominantShare.key === "yes"
+            ? endedCopy.yesOutcomeLabel
+            : endedCopy.noOutcomeLabel,
+        percent: formatPercent(dominantShare.percent, {}, locale),
+      })
+    : null;
   const sourceTimestamp = progress?.lastSuccessAt;
   const sourceLabel = sourceTimestamp
     ? endedCopy.sourceLabel(formatTimestamp(sourceTimestamp, locale))
     : progressCopy.lastCheckedPending;
 
   return (
-    <aside aria-label={endedCopy.ariaLabel} className="visual-card p-4 sm:p-5">
+    <aside
+      aria-label={endedCopy.ariaLabel}
+      className="visual-card scroll-mt-36 p-4 sm:p-5"
+      id="result"
+    >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <p className="font-display text-xl uppercase leading-none text-muted-foreground">
           &gt;_ {endedCopy.eyebrow}
@@ -356,6 +374,12 @@ export function RepMigrationProgressBar({
         <h2 className="font-display text-3xl uppercase leading-none text-loud-foreground sm:text-4xl">
           {endedCopy.outcomeSectionTitle}
         </h2>
+
+        {dominantNote ? (
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-foreground/80">
+            {dominantNote}
+          </p>
+        ) : null}
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <OutcomeCard

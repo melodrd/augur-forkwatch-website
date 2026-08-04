@@ -2,9 +2,11 @@ import { MigrationReadinessCard } from "@/components/migration/MigrationReadines
 import { RepMigrationProgressBar } from "@/components/migration/RepMigrationProgressBar";
 import { ExternalLinkWithWarning } from "@/components/ui/ExternalLinkWithWarning";
 import { forkFaqCards } from "@/content/fork/fork-faq";
+import { useCountUpPercent } from "@/features/migration/useCountUpPercent";
 import { useMigrationProgress } from "@/features/migration/useMigrationProgress";
 import { getCopy } from "@/i18n";
 import type { Locale } from "@/i18n/locales";
+import { formatPercent } from "@/lib/format";
 
 type ForkFaqCardProps = {
   answer: string;
@@ -48,12 +50,30 @@ function ForkFaqCard({
 }
 
 type ForkOverviewProps = {
+  /**
+   * Build-time Yes-universe share of the original supply. Keeps the headline
+   * populated during server render and if the live read is unavailable.
+   */
+  initialYesSupplyPercent: number | null;
   locale: Locale;
 };
 
-export function ForkOverview({ locale }: ForkOverviewProps) {
+export function ForkOverview({
+  initialYesSupplyPercent,
+  locale,
+}: ForkOverviewProps) {
   const copy = getCopy(locale).overview;
   const migrationProgress = useMigrationProgress();
+  const liveYesSupplyPercent =
+    migrationProgress.status === "ready"
+      ? migrationProgress.progress.outcomes.yes.supplyPercent
+      : null;
+  const yesSupplyPercent = liveYesSupplyPercent ?? initialYesSupplyPercent;
+  const countedPercent = useCountUpPercent(yesSupplyPercent);
+  const hasHeadlinePercent = countedPercent !== null;
+  const headline = hasHeadlinePercent
+    ? copy.headline(formatPercent(countedPercent, {}, locale))
+    : copy.headlineFallback;
 
   return (
     <section
@@ -65,20 +85,18 @@ export function ForkOverview({ locale }: ForkOverviewProps) {
         <p className="font-display text-xl uppercase leading-none text-muted-foreground">
           &gt;_ {copy.eyebrow}
         </p>
+        {/* tabular-nums keeps the headline from reflowing as the count-up runs. */}
         <h1
-          className="mt-2 font-display text-3xl uppercase leading-none text-foreground sm:text-5xl md:text-6xl lg:text-7xl"
+          className="mt-2 font-display text-3xl uppercase leading-none tabular-nums text-foreground sm:text-5xl md:text-6xl lg:text-7xl"
           id="overview-title"
         >
-          <span>{copy.titlePrefix}</span>{" "}
-          <span className="fork-title-status">
-            <span aria-hidden="true" className="fork-title-status-previous">
-              {copy.titlePreviousStatus}
-            </span>
-            <span className="fork-title-status-current">
-              {copy.titleStatus}
-            </span>
-          </span>
+          {headline}
         </h1>
+        {hasHeadlinePercent ? (
+          <p className="mt-2 font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">
+            {copy.headlineSupplyNote}
+          </p>
+        ) : null}
         <p className="mt-3 max-w-3xl text-sm leading-6 text-foreground/80">
           {copy.subtitle}
         </p>

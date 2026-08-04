@@ -417,25 +417,6 @@ a {
   filter: drop-shadow(0 0 var(--glow-size-lg, 1rem) var(--primary));
 }
 
-.fork-title-status {
-  display: inline-grid;
-  vertical-align: baseline;
-}
-
-.fork-title-status-previous,
-.fork-title-status-current {
-  grid-area: 1 / 1;
-  transform-origin: left center;
-}
-
-.fork-title-status-previous {
-  animation: fork-title-status-out 4s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.fork-title-status-current {
-  animation: fork-title-status-in 4s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
 @keyframes bounce-horizontal {
   0%,
   100% {
@@ -478,32 +459,6 @@ a {
   }
 }
 
-@keyframes fork-title-status-out {
-  0%,
-  50% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  75%,
-  100% {
-    opacity: 0;
-    transform: translateY(-0.24em);
-  }
-}
-
-@keyframes fork-title-status-in {
-  0%,
-  56% {
-    opacity: 0;
-    transform: translateY(0.24em);
-  }
-  86%,
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -523,17 +478,6 @@ a {
 
   .visual-card:hover,
   .polished-card:hover {
-    transform: none;
-  }
-
-  .fork-title-status-previous {
-    display: none;
-    animation: none;
-  }
-
-  .fork-title-status-current {
-    animation: none;
-    opacity: 1;
     transform: none;
   }
 }

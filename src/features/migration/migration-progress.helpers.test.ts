@@ -9,6 +9,7 @@ import {
   buildErrorMigrationProgressJson,
   buildLoadedMigrationProgressJson,
   calculateMigrationPercentFromRaw,
+  getDominantOutcomeShare,
   getMigrationProgressDataUrl,
   parseMigrationProgressPayload,
   unixTimestampToSafeNumber,
@@ -362,5 +363,45 @@ describe("migration progress helpers", () => {
       status: "error",
     });
     expect(parseMigrationProgressPayload(repeatedError)).not.toBeNull();
+  });
+});
+
+describe("getDominantOutcomeShare", () => {
+  function outcomes(yesRep: string | null, noRep: string | null) {
+    const base = loadedPayload().outcomes;
+
+    return {
+      yes: { ...base.yes, supplyRep: yesRep },
+      no: { ...base.no, supplyRep: noRep },
+    };
+  }
+
+  it("reports the larger universe's share of what migrated", () => {
+    const share = getDominantOutcomeShare(outcomes("6000000", "1000000"));
+
+    expect(share?.key).toBe("yes");
+    expect(share?.percent).toBeCloseTo(85.714, 3);
+  });
+
+  it("reports the no universe when it holds more", () => {
+    const share = getDominantOutcomeShare(outcomes("1000", "9000"));
+
+    expect(share).toEqual({ key: "no", percent: 90 });
+  });
+
+  it("keeps a near-total split precise rather than rounding to 100", () => {
+    const share = getDominantOutcomeShare(outcomes("6545539", "1786.23"));
+
+    expect(share?.key).toBe("yes");
+    expect(share?.percent).toBeCloseTo(99.9727, 4);
+  });
+
+  it("returns null when either supply is unknown", () => {
+    expect(getDominantOutcomeShare(outcomes(null, "1000"))).toBeNull();
+    expect(getDominantOutcomeShare(outcomes("1000", null))).toBeNull();
+  });
+
+  it("returns null when nothing migrated", () => {
+    expect(getDominantOutcomeShare(outcomes("0", "0"))).toBeNull();
   });
 });

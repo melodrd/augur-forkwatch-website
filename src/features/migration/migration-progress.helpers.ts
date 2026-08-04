@@ -118,6 +118,47 @@ export function calculateMigrationPercent(
   return Math.min(100, Math.max(0, (migratedRep / totalRep) * 100));
 }
 
+function parseOutcomeSupply(outcome: MigrationOutcomeSnapshot): number | null {
+  if (!outcome.supplyRep) {
+    return null;
+  }
+
+  const supply = Number(outcome.supplyRep);
+
+  return Number.isFinite(supply) && supply >= 0 ? supply : null;
+}
+
+/**
+ * Splits the migrated REP between the two child universes. The percentage is a
+ * share of what actually migrated, which is a different denominator from the
+ * per-outcome `supplyPercent` values (those are shares of the original supply).
+ * Returns null unless both supplies are known, so a partial read never implies
+ * a lopsided split that the data does not support.
+ */
+export function getDominantOutcomeShare(
+  outcomes: Record<MigrationOutcomeKey, MigrationOutcomeSnapshot>,
+): { key: MigrationOutcomeKey; percent: number } | null {
+  const yes = parseOutcomeSupply(outcomes.yes);
+  const no = parseOutcomeSupply(outcomes.no);
+
+  if (yes === null || no === null) {
+    return null;
+  }
+
+  const total = yes + no;
+
+  if (total <= 0) {
+    return null;
+  }
+
+  const key: MigrationOutcomeKey = yes >= no ? "yes" : "no";
+
+  return {
+    key,
+    percent: ((key === "yes" ? yes : no) / total) * 100,
+  };
+}
+
 export function calculateMigrationPercentFromRaw({
   decimals,
   migratedRaw,

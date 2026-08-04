@@ -16,7 +16,6 @@ function formatLocalDeadline(date: Date, intlLocale: string) {
     hourCycle: "h23",
     minute: "2-digit",
     month: "short",
-    second: "2-digit",
     timeZoneName: "short",
     year: "numeric",
   }).format(date);
@@ -29,7 +28,6 @@ function formatUtcDeadline(date: Date, intlLocale: string) {
     hourCycle: "h23",
     minute: "2-digit",
     month: "short",
-    second: "2-digit",
     timeZone: "UTC",
     timeZoneName: "short",
     year: "numeric",
@@ -50,7 +48,6 @@ function formatTimelineTime(date: Date, intlLocale: string) {
     hour: "2-digit",
     hourCycle: "h23",
     minute: "2-digit",
-    second: "2-digit",
     timeZone: "UTC",
     timeZoneName: "short",
   }).format(date);
@@ -148,7 +145,7 @@ function DeadlineTimeValue({
   value: string;
 }) {
   return (
-    <div className="min-h-24 px-3 py-4 sm:col-span-2 sm:px-4 sm:py-5">
+    <div className="min-h-24 px-3 py-4 sm:px-4 sm:py-5">
       <dt className="font-display text-lg uppercase leading-none text-muted-foreground">
         {label}
       </dt>
@@ -177,7 +174,7 @@ function DeadlinePanel({
           {copy.cutoffTime}
         </p>
       </div>
-      <dl className="grid flex-1 divide-y divide-primary/10 sm:grid-cols-4 sm:divide-x sm:divide-y-0">
+      <dl className="grid flex-1 divide-y divide-primary/10 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
         <DeadlineTimeValue
           dateTime={dateTime}
           label={copy.utcLabel}
@@ -193,15 +190,7 @@ function DeadlinePanel({
   );
 }
 
-function ClosedStatusPanel({
-  copy,
-  targetDate,
-  utcDeadline,
-}: {
-  copy: MigrationCardCopy;
-  targetDate: Date;
-  utcDeadline: string;
-}) {
+function ClosedStatusPanel({ copy }: { copy: MigrationCardCopy }) {
   const endedCopy = copy.ended;
 
   return (
@@ -210,12 +199,6 @@ function ClosedStatusPanel({
         <p className="inline-flex min-h-7 items-center border border-primary/45 bg-primary/10 px-2 py-1 font-display text-base uppercase leading-none text-primary">
           {endedCopy.badge}
         </p>
-        <time
-          className="font-mono text-xs text-muted-foreground"
-          dateTime={targetDate.toISOString()}
-        >
-          {utcDeadline}
-        </time>
       </div>
       <p className="mt-4 font-display text-4xl uppercase leading-none text-loud-foreground sm:text-5xl">
         {endedCopy.title}
@@ -252,11 +235,7 @@ export function MigrationReadinessCard({
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.52fr)] lg:items-stretch">
         <div className="flex h-full flex-col">
-          <ClosedStatusPanel
-            copy={copy}
-            targetDate={targetDate}
-            utcDeadline={utcDeadline}
-          />
+          <ClosedStatusPanel copy={copy} />
 
           <MigrationTimelineFigure
             copy={copy}

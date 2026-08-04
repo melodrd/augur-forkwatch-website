@@ -11,6 +11,9 @@ const IDENTICAL_WHITELIST = new Set([
   "UTC",
   "ForkWatch",
   "REP",
+  // Child-universe names are proper nouns carried untranslated in both locales.
+  "Yes",
+  "No",
 ]);
 
 // A single argument object that satisfies the object-shaped template-function
@@ -21,6 +24,8 @@ const SAMPLE_ARG = {
   end: "END",
   date: "DATE",
   endpoint: "ENDPOINT",
+  outcome: "OUTCOME",
+  percent: "PERCENT",
 };
 
 function resolveLeaf(value: unknown): string {
@@ -110,19 +115,31 @@ describe("Korean copy dictionary", () => {
     expect(untranslated).toEqual([]);
   });
 
-  it("keeps natural previous and final headline states in both locales", () => {
-    expect(
-      `${en.overview.titlePrefix} ${en.overview.titlePreviousStatus}`,
-    ).toBe("The Augur fork is happening");
-    expect(`${en.overview.titlePrefix} ${en.overview.titleStatus}`).toBe(
-      "The Augur fork happened",
+  it("leads the headline with the migrated share in both locales", () => {
+    expect(en.overview.headline("59.50%")).toBe(
+      "59.50% migrated to the Yes universe",
     );
-    expect(
-      `${ko.overview.titlePrefix} ${ko.overview.titlePreviousStatus}`,
-    ).toBe("오거 포크가 진행 중입니다");
-    expect(`${ko.overview.titlePrefix} ${ko.overview.titleStatus}`).toBe(
-      "오거 포크가 종료되었습니다",
+    expect(ko.overview.headline("59.50%")).toBe(
+      "59.50%가 Yes 유니버스로 이동했습니다",
     );
+  });
+
+  it("names the supply denominator next to the headline percentage", () => {
+    for (const supplyNote of [
+      en.overview.headlineSupplyNote,
+      ko.overview.headlineSupplyNote,
+    ]) {
+      expect(supplyNote).toMatch(/11M|1,100만/);
+    }
+  });
+
+  it("falls back to a static headline when the share is unknown", () => {
+    for (const fallback of [
+      en.overview.headlineFallback,
+      ko.overview.headlineFallback,
+    ]) {
+      expect(fallback).not.toMatch(/%|NaN|null|undefined/);
+    }
   });
 
   it("explains remaining REP gently without internal result jargon", () => {
@@ -144,20 +161,24 @@ describe("Korean copy dictionary", () => {
   });
 
   it("describes the two migrated supplies without implying an outcome", () => {
-    expect(en.progressBar.ended.yesOutcomeLabel).toBe("Yes child universe");
-    expect(en.progressBar.ended.noOutcomeLabel).toBe("No child universe");
-    expect(ko.progressBar.ended.yesOutcomeLabel).toBe("Yes 자식 유니버스");
-    expect(ko.progressBar.ended.noOutcomeLabel).toBe("No 자식 유니버스");
-    expect(en.repChecker.migratedRepYesLabel).toBe("Migrated REP (Yes)");
-    expect(en.repChecker.migratedRepNoLabel).toBe("Migrated REP (No)");
-    expect(ko.repChecker.migratedRepYesLabel).toBe("마이그레이션된 REP (Yes)");
-    expect(ko.repChecker.migratedRepNoLabel).toBe("마이그레이션된 REP (No)");
+    expect(en.progressBar.ended.yesOutcomeLabel).toBe("Yes universe");
+    expect(en.progressBar.ended.noOutcomeLabel).toBe("No universe");
+    expect(ko.progressBar.ended.yesOutcomeLabel).toBe("Yes 유니버스");
+    expect(ko.progressBar.ended.noOutcomeLabel).toBe("No 유니버스");
 
     const outcomeCopy = [
       en.progressBar.ended.outcomeSectionTitle,
       ko.progressBar.ended.outcomeSectionTitle,
       en.progressBar.ended.tokenSupplyLabel,
       ko.progressBar.ended.tokenSupplyLabel,
+      en.progressBar.ended.dominantOutcomeNote({
+        outcome: en.progressBar.ended.yesOutcomeLabel,
+        percent: "99.97%",
+      }),
+      ko.progressBar.ended.dominantOutcomeNote({
+        outcome: ko.progressBar.ended.yesOutcomeLabel,
+        percent: "99.97%",
+      }),
     ].join("\n");
     expect(outcomeCopy).not.toMatch(
       /winner|winning|confirmed|pending|승리|확정|대기/i,

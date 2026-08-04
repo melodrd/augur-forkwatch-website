@@ -32,6 +32,7 @@ export const en = {
   nav: {
     sectionLabels: {
       overview: "Overview",
+      result: "Migration Result",
       "scam-warning": "Scam Warning",
       "exchange-support": "Exchange Archive",
       check: "Check REP",
@@ -42,9 +43,11 @@ export const en = {
   },
   overview: {
     eyebrow: "Fork status",
-    titlePrefix: "The Augur fork",
-    titlePreviousStatus: "is happening",
-    titleStatus: "happened",
+    // The percentage is the Yes universe's share of the original supply, which
+    // is why the supply note names the 11M denominator directly beneath it.
+    headline: (percent) => `${percent} migrated to the Yes universe`,
+    headlineFallback: "The Augur fork has ended",
+    headlineSupplyNote: "of the original 11M REP supply",
     subtitle:
       "The 60-day fork window has closed. See how much REP was migrated, check the REP held by an address, and review the fork record.",
     faq: {
@@ -58,13 +61,13 @@ export const en = {
         question: "What can I do now?",
         answer:
           "The migration window is closed, so migrating is no longer possible and REP left in the parent universe is expected to be worthless. You can still use the read-only checker to review REPv1, REPv2, and migrated REP held by an Ethereum mainnet address.",
-        ctaLabel: "Read archived migration guide",
+        ctaLabel: "Migration guide (archived)",
       },
       "how-urgent": {
         question: "I still hold REPv2. What now?",
         answer:
           "If you did not migrate and still hold REPv1 or REPv2, there is nothing left to do—the window cannot be reopened. You can still use the read-only checker below to see exactly what an address holds. Please be cautious with anyone offering late migration or recovery; those claims are scams.",
-        ctaLabel: "Check my REP",
+        ctaLabel: "Check wallet for REP",
       },
     },
   },
@@ -76,10 +79,10 @@ export const en = {
     localLabel: "Local",
     ended: {
       ariaLabel: "Augur fork window ended",
-      eyebrow: "Fork status",
+      eyebrow: "Timeline",
       badge: "Ended",
       title: "The migration window has ended",
-      body: "The 60-day window is complete, and REP can no longer be migrated. ForkWatch remains available as a read-only record.",
+      body: "The 60-day window is complete, and REP can no longer be migrated.",
       timelineTitle: "Completed 60-day timeline",
       timelineAriaLabel: ({ start, end }) =>
         `The 60-day fork timeline ran from ${start} to ${end} and is complete.`,
@@ -91,7 +94,7 @@ export const en = {
       nextActionBody:
         "Use the read-only checker to review REP held by an Ethereum mainnet address.",
       checkRepButton: "CHECK REP BALANCES",
-      migrationInstructions: "READ OFFICIAL GUIDE (ARCHIVE)",
+      migrationInstructions: "MIGRATION GUIDE (ARCHIVE)",
     },
   },
   progressBar: {
@@ -105,7 +108,6 @@ export const en = {
     ethReadUnavailable:
       "The migrated REP totals are temporarily unavailable because Ethereum could not be reached during the latest update.",
     lastCheckedPending: "Update time unavailable",
-    lastChecked: (timestamp) => `Ethereum data updated ${timestamp}`,
     ended: {
       ariaLabel: "REP migration totals from the Augur fork",
       eyebrow: "Migration result",
@@ -117,9 +119,18 @@ export const en = {
       blockLabel: (blockNumber) => `Block ${blockNumber}`,
       outcomeSectionLabel: "Migration totals by child universe",
       outcomeSectionTitle: "Where the REP moved",
-      yesOutcomeLabel: "Yes child universe",
-      noOutcomeLabel: "No child universe",
-      tokenSupplyLabel: "Migrated supply",
+      yesOutcomeLabel: "Yes universe",
+      noOutcomeLabel: "No universe",
+      outcomeBadge: {
+        yes: "Yes",
+        no: "No",
+      },
+      // States the split between the two child universes as a share of what
+      // actually migrated, which is a different denominator from the
+      // share-of-original-supply figures on each card.
+      dominantOutcomeNote: ({ outcome, percent }) =>
+        `The ${outcome} received ${percent} of all migrated REP.`,
+      tokenSupplyLabel: "Share of original supply",
       tokenContractLabel: "Token contract",
       childUniverseLabel: "Child universe",
       parentUniverseLabel: "Parent universe",
@@ -166,8 +177,6 @@ export const en = {
     addressLabel: "Ethereum address",
     checkButton: "Check REP",
     checkingButton: "Checking...",
-    migratedRepYesLabel: "Migrated REP (Yes)",
-    migratedRepNoLabel: "Migrated REP (No)",
     archiveNotice:
       "The fork window is closed. This checker only reads balances; it cannot migrate, move, claim, or recover REP.",
     scopeCards: {

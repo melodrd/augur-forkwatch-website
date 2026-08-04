@@ -1,11 +1,17 @@
 import type { ExchangeGroupId } from "@/content/fork/exchange-support";
 import type { ForkFaqId } from "@/content/fork/fork-faq";
 import type { ForkSectionId } from "@/content/fork/fork-sections";
+import type { MigrationOutcomeKey } from "@/features/migration/migration-progress.types";
 import type { WalletRepResultKind } from "@/features/rep-checker/rep-checker.types";
 
 export type CompletedTimelineRange = {
   start: string;
   end: string;
+};
+
+export type DominantOutcomeShare = {
+  outcome: string;
+  percent: string;
 };
 
 export type CheckedThroughArgs = {
@@ -51,8 +57,6 @@ type RepCheckerPhaseCopy = {
   addressLabel: string;
   checkButton: string;
   checkingButton: string;
-  migratedRepYesLabel: string;
-  migratedRepNoLabel: string;
   scopeCards: {
     whyItMatters: ScopeCardCopy;
     scope: ScopeCardCopy;
@@ -128,9 +132,9 @@ export type SiteCopy = {
   };
   overview: {
     eyebrow: string;
-    titlePrefix: string;
-    titlePreviousStatus: string;
-    titleStatus: string;
+    headline: (percent: string) => string;
+    headlineFallback: string;
+    headlineSupplyNote: string;
     subtitle: string;
     faq: Record<ForkFaqId, FaqCardCopy>;
   };
@@ -165,7 +169,6 @@ export type SiteCopy = {
     readFailed: string;
     ethReadUnavailable: string;
     lastCheckedPending: string;
-    lastChecked: (timestamp: string) => string;
     ended: {
       ariaLabel: string;
       eyebrow: string;
@@ -178,6 +181,8 @@ export type SiteCopy = {
       outcomeSectionTitle: string;
       yesOutcomeLabel: string;
       noOutcomeLabel: string;
+      outcomeBadge: Record<MigrationOutcomeKey, string>;
+      dominantOutcomeNote: (share: DominantOutcomeShare) => string;
       tokenSupplyLabel: string;
       tokenContractLabel: string;
       childUniverseLabel: string;

@@ -36,6 +36,7 @@ export const ko = {
   nav: {
     sectionLabels: {
       overview: "개요",
+      result: "마이그레이션 결과",
       "scam-warning": "사기 경고",
       "exchange-support": "거래소 기록",
       check: "REP 확인",
@@ -46,9 +47,9 @@ export const ko = {
   },
   overview: {
     eyebrow: "포크 상태",
-    titlePrefix: "오거 포크가",
-    titlePreviousStatus: "진행 중입니다",
-    titleStatus: "종료되었습니다",
+    headline: (percent) => `${percent}가 Yes 유니버스로 이동했습니다`,
+    headlineFallback: "오거 포크가 종료되었습니다",
+    headlineSupplyNote: "기존 REP 공급량 1,100만 개 기준",
     subtitle:
       "60일간의 포크 기간이 종료되었습니다. 마이그레이션된 REP 수량과 주소에 남아 있는 REP을 확인하고 포크 기록을 살펴보세요.",
     faq: {
@@ -62,13 +63,13 @@ export const ko = {
         question: "지금 무엇을 할 수 있나요?",
         answer:
           "마이그레이션 기간이 종료되어 이제 마이그레이션은 불가능하며, 부모 유니버스에 남은 REP은 가치가 없을 것으로 예상됩니다. 읽기 전용 조회 도구로 이더리움 메인넷 주소의 REPv1, REPv2, 마이그레이션된 REP은 계속 확인할 수 있습니다.",
-        ctaLabel: "이전 마이그레이션 가이드 보기",
+        ctaLabel: "마이그레이션 가이드(기록)",
       },
       "how-urgent": {
         question: "아직 REPv2가 있다면 어떻게 하나요?",
         answer:
           "마이그레이션하지 못하고 REPv1이나 REPv2를 그대로 보유하고 있다면 이제 할 수 있는 일은 없습니다. 기간은 다시 열리지 않습니다. 아래 읽기 전용 조회 도구로 주소에 무엇이 남아 있는지는 확인할 수 있습니다. 늦은 마이그레이션이나 복구를 제안하는 연락은 사기이므로 주의하세요.",
-        ctaLabel: "내 REP 확인하기",
+        ctaLabel: "지갑의 REP 확인하기",
       },
     },
   },
@@ -80,10 +81,10 @@ export const ko = {
     localLabel: "현지",
     ended: {
       ariaLabel: "오거 포크 기간 종료",
-      eyebrow: "포크 상태",
+      eyebrow: "타임라인",
       badge: "종료",
       title: "마이그레이션 기간이 종료되었습니다",
-      body: "60일간의 기간이 모두 끝났으며 이제 REP을 마이그레이션할 수 없습니다. ForkWatch는 읽기 전용 기록으로 계속 제공됩니다.",
+      body: "60일간의 기간이 모두 끝났으며 이제 REP을 마이그레이션할 수 없습니다.",
       timelineTitle: "완료된 60일 타임라인",
       timelineAriaLabel: ({ start, end }) =>
         `60일 포크 타임라인은 ${start}부터 ${end}까지 진행된 후 종료되었습니다.`,
@@ -95,7 +96,7 @@ export const ko = {
       nextActionBody:
         "읽기 전용 조회 도구로 이더리움 메인넷 주소의 REP을 확인하세요.",
       checkRepButton: "REP 잔액 확인",
-      migrationInstructions: "공식 가이드 보기(기록)",
+      migrationInstructions: "마이그레이션 가이드(기록)",
     },
   },
   progressBar: {
@@ -110,7 +111,6 @@ export const ko = {
     ethReadUnavailable:
       "최근 업데이트 중 이더리움 메인넷에 연결할 수 없어 마이그레이션된 REP 합계를 일시적으로 확인할 수 없습니다.",
     lastCheckedPending: "업데이트 시각을 확인할 수 없음",
-    lastChecked: (timestamp) => `이더리움 데이터 업데이트: ${timestamp}`,
     ended: {
       ariaLabel: "오거 포크의 REP 마이그레이션 수량",
       eyebrow: "마이그레이션 결과",
@@ -122,9 +122,15 @@ export const ko = {
       blockLabel: (blockNumber) => `블록 ${blockNumber}`,
       outcomeSectionLabel: "자식 유니버스별 마이그레이션 수량",
       outcomeSectionTitle: "REP 이동 결과",
-      yesOutcomeLabel: "Yes 자식 유니버스",
-      noOutcomeLabel: "No 자식 유니버스",
-      tokenSupplyLabel: "마이그레이션 수량",
+      yesOutcomeLabel: "Yes 유니버스",
+      noOutcomeLabel: "No 유니버스",
+      outcomeBadge: {
+        yes: "Yes",
+        no: "No",
+      },
+      dominantOutcomeNote: ({ outcome, percent }) =>
+        `마이그레이션된 전체 REP 중 ${percent}가 ${outcome}로 이동했습니다.`,
+      tokenSupplyLabel: "기존 공급량 대비",
       tokenContractLabel: "토큰 컨트랙트",
       childUniverseLabel: "자식 유니버스",
       parentUniverseLabel: "부모 유니버스",
@@ -176,8 +182,6 @@ export const ko = {
     addressLabel: "이더리움 주소",
     checkButton: "REP 확인",
     checkingButton: "확인 중...",
-    migratedRepYesLabel: "마이그레이션된 REP (Yes)",
-    migratedRepNoLabel: "마이그레이션된 REP (No)",
     archiveNotice:
       "포크 기간은 종료되었습니다. 이 도구는 잔액만 읽으며 REP을 마이그레이션, 이동, 수령 또는 복구할 수 없습니다.",
     scopeCards: {

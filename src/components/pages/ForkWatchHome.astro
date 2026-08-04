@@ -31,7 +31,11 @@ const copy = getCopy(locale);
     <main
       class="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8"
     >
-      <ForkOverview client:load locale={locale} />
+      <ForkOverview
+        client:load
+        initialYesSupplyPercent={migrationProgress.outcomes.yes.supplyPercent}
+        locale={locale}
+      />
       <ScamWarningSection locale={locale} />
       <ExchangeSupportSection client:visible locale={locale} />
       <ForkRepCheckSection client:visible locale={locale} />
